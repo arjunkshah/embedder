@@ -149,7 +149,14 @@ const Dashboard = () => {
       const iframeWidth = height * (16 / 9); // Calculate width to maintain 16:9 aspect ratio for the iframe
 
       return (
-        <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative', background: '#000' }}>
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            overflow: "hidden",
+            position: "relative",
+          }}
+        >
           <iframe
             src={`https://www.youtube.com/embed/${previewVideoId}?autoplay=${autoplayParam}&controls=${controlsParam}&showinfo=0&rel=0&modestbranding=1`}
             style={{
