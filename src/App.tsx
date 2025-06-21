@@ -8,7 +8,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Pricing from "./pages/Pricing";
 import NotFound from "./pages/NotFound";
-import PastEmbeds from "./pages/PastEmbeds";
+import EmbedGallery from "./pages/EmbedGallery";
 import Success from "./pages/Success";
 import Cancel from "./pages/Cancel";
 
@@ -21,10 +21,9 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<Dashboard />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/embeds" element={<PastEmbeds />} />
+          <Route path="/embeds" element={<EmbedGallery />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/success" element={<Success />} />
           <Route path="/cancel" element={<Cancel />} />

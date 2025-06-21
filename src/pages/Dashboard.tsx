@@ -14,6 +14,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Rnd } from "react-rnd";
 import { Helmet, HelmetProvider } from "react-helmet-async";
+import { Link } from "react-router-dom";
 
 declare global {
   interface Window {
@@ -260,9 +261,9 @@ const Dashboard = () => {
           <div>
             <div className="flex items-center justify-between mb-6">
               <h1 className="text-2xl font-bold">Embed Generator</h1>
-              <span className="text-sm text-muted-foreground">
-                {embedCount} / 50 embeds
-              </span>
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/embeds">View Gallery</Link>
+              </Button>
             </div>
 
             <div className="space-y-6">
