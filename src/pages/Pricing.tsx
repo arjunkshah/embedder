@@ -1,34 +1,8 @@
 
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { PricingDemo } from "@/components/ui/demo";
 
 const Pricing = () => {
-  const pricingPlans = [
-    {
-      name: "Free",
-      price: "$0",
-      description: "Perfect for getting started",
-      features: ["10 embeds per month", "Basic customization", "Standard support", "YouTube, TikTok, Instagram support"],
-      cta: "Get Started",
-      popular: false
-    },
-    {
-      name: "Pro",
-      price: "$19",
-      description: "For content creators",
-      features: ["Unlimited embeds", "Advanced customization", "Priority support", "Analytics dashboard", "Custom branding", "API access"],
-      cta: "Start Free Trial",
-      popular: true
-    },
-    {
-      name: "Enterprise",
-      price: "$99",
-      description: "For large organizations",
-      features: ["Everything in Pro", "Dedicated support", "Custom integrations", "White-label solution", "SLA guarantee", "Team management"],
-      cta: "Contact Sales",
-      popular: false
-    }
-  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -66,53 +40,7 @@ const Pricing = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {pricingPlans.map((plan, index) => (
-              <div
-                key={index}
-                className={`bg-card border rounded-lg p-8 relative ${
-                  plan.popular 
-                    ? "border-brand shadow-lg scale-105" 
-                    : "border-border"
-                }`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-brand text-white px-3 py-1 rounded-full text-sm font-medium">
-                      Most Popular
-                    </span>
-                  </div>
-                )}
-                
-                <div className="text-center">
-                  <h3 className="text-xl font-semibold text-foreground">{plan.name}</h3>
-                  <p className="text-3xl font-bold text-foreground mt-4">{plan.price}</p>
-                  <p className="text-muted-foreground mt-1">/month</p>
-                  <p className="text-muted-foreground mt-4">{plan.description}</p>
-                </div>
-
-                <ul className="space-y-3 mt-8">
-                  {plan.features.map((feature, featureIndex) => (
-                    <li key={featureIndex} className="flex items-center gap-3">
-                      <Check className="h-4 w-4 text-brand flex-shrink-0" />
-                      <span className="text-foreground">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <Button
-                  className={`w-full mt-8 ${
-                    plan.popular 
-                      ? "bg-brand hover:bg-brand/90 text-white" 
-                      : "bg-background border border-border hover:bg-accent"
-                  }`}
-                  asChild
-                >
-                  <a href="/login">{plan.cta}</a>
-                </Button>
-              </div>
-            ))}
-          </div>
+          <PricingDemo />
         </div>
       </section>
 
