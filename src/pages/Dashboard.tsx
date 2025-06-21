@@ -32,7 +32,7 @@ const Dashboard = () => {
   const [borderRadius, setBorderRadius] = useState([8]);
   const [bgColor, setBgColor] = useState("#f0f0f0");
   const [orientation, setOrientation] = useState("horizontal");
-  const [previewEmbeds, setPreviewEmbeds] = useState<{platform: string; id: string}[]>([]);
+  const [previewEmbeds, setPreviewEmbeds] = useState<{platform: string; videoId: string}[]>([]);
   const [embedCode, setEmbedCode] = useState("");
   const [copied, setCopied] = useState(false);
   const [embedCount, setEmbedCount] = useState(3);
@@ -190,7 +190,7 @@ const Dashboard = () => {
         <Carousel className="w-full" opts={{ loop: true, axis: orientation === 'vertical' ? 'y' : 'x' }}>
           <CarouselContent>
             {previewEmbeds.map((e, idx) => (
-              <CarouselItem key={idx}>{renderSingle(e.platform, e.id)}</CarouselItem>
+              <CarouselItem key={idx}>{renderSingle(e.platform, e.videoId)}</CarouselItem>
             ))}
           </CarouselContent>
           <CarouselPrevious />
@@ -199,8 +199,8 @@ const Dashboard = () => {
       );
     }
 
-    const { platform, id } = previewEmbeds[0];
-    return <div style={{ display: "flex", justifyContent, width: "100%" }}>{renderSingle(platform, id)}</div>;
+    const { platform, videoId } = previewEmbeds[0];
+    return <div style={{ display: "flex", justifyContent, width: "100%" }}>{renderSingle(platform, videoId)}</div>;
   };
 
   return (
