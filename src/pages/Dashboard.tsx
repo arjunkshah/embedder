@@ -76,8 +76,12 @@ const Dashboard = () => {
     if (isNew) {
       if (videoUrl.includes("youtube.com") || videoUrl.includes("youtu.be")) {
         platform = "youtube";
-        const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?)|(shorts\/))\??v?=?([^#&?]*).*/;
-        const match = videoUrl.match(regExp);
+        let tempUrl = videoUrl;
+        if (tempUrl.includes("/shorts/")) {
+          tempUrl = tempUrl.replace("/shorts/", "/embed/");
+        }
+        const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+        const match = tempUrl.match(regExp);
         videoId = match && match[8].length === 11 ? match[8] : "";
       } else if (videoUrl.includes("tiktok.com")) {
         platform = "tiktok";
@@ -168,6 +172,7 @@ const Dashboard = () => {
       const autoplayParam = autoplay ? "1" : "0";
       const controlsParam = controls ? "0" : "1";
       const iframeHeight = width * (16 / 9);
+      const embedUrl = `https://www.youtube.com/embed/${previewVideoId}?autoplay=${autoplayParam}&controls=${controlsParam}&showinfo=0&rel=0&modestbranding=1`;
 
       return (
         <div
@@ -180,7 +185,7 @@ const Dashboard = () => {
           }}
         >
           <iframe
-            src={`https://www.youtube.com/embed/${previewVideoId}?autoplay=${autoplayParam}&controls=${controlsParam}&showinfo=0&rel=0&modestbranding=1`}
+            src={embedUrl}
             style={{
               position: 'absolute',
               top: '50%',
