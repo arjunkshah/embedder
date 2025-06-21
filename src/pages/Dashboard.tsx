@@ -15,6 +15,17 @@ import { Switch } from "@/components/ui/switch";
 import { Rnd } from "react-rnd";
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import { Link } from "react-router-dom";
+import { plans, getUserPlan, setUserPlan } from "@/lib/plans";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 declare global {
   interface Window {
@@ -40,19 +51,33 @@ const Dashboard = () => {
   const [controls, setControls] = useState(true);
   const [embedCode, setEmbedCode] = useState("");
   const [copied, setCopied] = useState(false);
-  const [embedCount, setEmbedCount] = useState(3);
+  const [embedCount, setEmbedCount] = useState(0);
   const [showPreview, setShowPreview] = useState(false);
   const [showCode, setShowCode] = useState(false);
   const [previewPlatform, setPreviewPlatform] = useState("");
   const [previewVideoId, setPreviewVideoId] = useState("");
+  const [userPlan, setUserPlanState] = useState(getUserPlan());
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const isVerticalVideo = ["youtube", "tiktok", "instagram"].includes(previewPlatform);
+  const isEmbedLimitReached = embedCount >= userPlan.limit;
 
   useEffect(() => {
     const storedEmbeds = localStorage.getItem("embeds");
     if (storedEmbeds) {
       setEmbedCount(JSON.parse(storedEmbeds).length);
     }
+
+    const handleStorageChange = () => {
+      setUserPlanState(getUserPlan());
+      const updatedStoredEmbeds = localStorage.getItem("embeds");
+      if (updatedStoredEmbeds) {
+        setEmbedCount(JSON.parse(updatedStoredEmbeds).length);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
   
   useEffect(() => {
@@ -107,7 +132,13 @@ const Dashboard = () => {
       setPreviewPlatform(platform);
       setPreviewVideoId(videoId);
       setShowPreview(true);
-      if (isNew && save) setEmbedCount(prev => prev + 1);
+      if (isNew && save) {
+        if (isEmbedLimitReached) {
+          setShowUpgradeModal(true);
+          return;
+        }
+        setEmbedCount(prev => prev + 1);
+      }
     }
 
     let html = "";
@@ -131,8 +162,14 @@ const Dashboard = () => {
     if (save) {
       try {
         const stored = JSON.parse(localStorage.getItem("embeds") || "[]");
-        stored.unshift({ url: videoUrl, code: html, date: new Date().toISOString() });
-        localStorage.setItem("embeds", JSON.stringify(stored.slice(0, 50)));
+        if (isEmbedLimitReached && !stored.find(item => item.code === html)) {
+          return;
+        }
+        
+        if (!stored.find(item => item.code === html)) {
+            stored.unshift({ url: videoUrl, code: html, date: new Date().toISOString() });
+            localStorage.setItem("embeds", JSON.stringify(stored.slice(0, 50)));
+        }
       } catch {
         localStorage.setItem("embeds", JSON.stringify([{ url: videoUrl, code: html, date: new Date().toISOString() }]));
       }
@@ -261,9 +298,9 @@ const Dashboard = () => {
           <div>
             <div className="flex items-center justify-between mb-6">
               <h1 className="text-2xl font-bold">Embed Generator</h1>
-              <Button variant="outline" size="sm" asChild>
-                <Link to="/embeds">View Gallery</Link>
-              </Button>
+              <span className="text-sm font-medium">
+                {embedCount} / {userPlan.limit === Infinity ? 'Unlimited' : userPlan.limit} embeds
+              </span>
             </div>
 
             <div className="space-y-6">
@@ -363,7 +400,7 @@ const Dashboard = () => {
             </div>
           </div>
           
-          <Button onClick={showPreview ? handleGenerate : () => generateEmbedCode(true, false)} size="lg" className="w-full">
+          <Button onClick={showPreview ? handleGenerate : () => generateEmbedCode(true, false)} size="lg" className="w-full" disabled={isEmbedLimitReached && !showPreview}>
             {showPreview ? (
               <>
                 <Code className="mr-2 h-4 w-4" />
@@ -424,6 +461,22 @@ const Dashboard = () => {
             </div>
           )}
         </main>
+        <AlertDialog open={showUpgradeModal} onOpenChange={setShowUpgradeModal}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Upgrade to Pro</AlertDialogTitle>
+              <AlertDialogDescription>
+                You've reached your embed limit for the {userPlan.name} plan. Please upgrade to the Pro plan to create more embeds.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction asChild>
+                <Link to="/pricing">Upgrade</Link>
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </HelmetProvider>
   );

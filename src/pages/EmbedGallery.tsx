@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Copy, Check, Plus, Trash2 } from "lucide-react";
+import { plans, getUserPlan } from "@/lib/plans";
 
 interface Embed {
   url: string;
@@ -12,6 +13,7 @@ interface Embed {
 const EmbedGallery = () => {
   const [embeds, setEmbeds] = useState<Embed[]>([]);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [userPlan, setUserPlanState] = useState(getUserPlan());
 
   useEffect(() => {
     try {
@@ -20,6 +22,15 @@ const EmbedGallery = () => {
     } catch {
       setEmbeds([]);
     }
+
+    const handleStorageChange = () => {
+      setUserPlanState(getUserPlan());
+      const updatedStoredEmbeds = JSON.parse(localStorage.getItem("embeds") || "[]");
+      setEmbeds(updatedStoredEmbeds);
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   const copyToClipboard = (code: string) => {
@@ -40,9 +51,14 @@ const EmbedGallery = () => {
       <header className="p-4 border-b border-border">
         <div className="container mx-auto flex justify-between items-center">
           <h1 className="text-2xl font-bold">Embed Gallery</h1>
-          <Button asChild>
-            <Link to="/"><Plus className="mr-2 h-4 w-4" /> Create New Embed</Link>
-          </Button>
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-medium text-muted-foreground">
+              {embeds.length} / {userPlan.limit === Infinity ? 'Unlimited' : userPlan.limit} embeds used
+            </span>
+            <Button asChild>
+              <Link to="/"><Plus className="mr-2 h-4 w-4" /> Create New Embed</Link>
+            </Button>
+          </div>
         </div>
       </header>
       <main className="container mx-auto p-8">

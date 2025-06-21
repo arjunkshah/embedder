@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, useStripe } from "@stripe/react-stripe-js";
+import { plans, setUserPlan } from "@/lib/plans";
 
 const stripePromise = loadStripe("pk_test_51RcSjsBNBx6FicItofkBwq8naZKej6g2B0iRIrj6hhbHdDKOUGeRCn1sHShdl3iMHgstdNSgLSlE4ZeBoeo3uT7w00ol6p1h5F");
 
@@ -92,7 +93,7 @@ function Pricing() {
                             <p>Community Support</p>
                           </div>
                         </div>
-                        <Button asChild variant="outline" className="gap-4">
+                        <Button asChild variant="outline" className="gap-4" onClick={() => setUserPlan(plans.free)}>
                           <a href="/login">
                             Get Started <MoveRight className="w-4 h-4" />
                           </a>
@@ -135,7 +136,10 @@ function Pricing() {
                             <p>Priority Support</p>
                           </div>
                         </div>
-                        <Button className="gap-4" onClick={() => handleCheckout("price_123")}>
+                        <Button className="gap-4" onClick={() => {
+                          handleCheckout("price_123");
+                          setUserPlan(plans.pro);
+                        }}>
                           Upgrade to Pro <MoveRight className="w-4 h-4" />
                         </Button>
                       </div>
@@ -175,7 +179,7 @@ function Pricing() {
                             <p>Advanced Analytics</p>
                           </div>
                         </div>
-                        <Button variant="outline" className="gap-4">
+                        <Button variant="outline" className="gap-4" onClick={() => setUserPlan(plans.enterprise)}>
                           Contact Sales <PhoneCall className="w-4 h-4" />
                         </Button>
                       </div>
