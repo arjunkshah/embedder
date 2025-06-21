@@ -117,6 +117,17 @@ const Dashboard = () => {
     updateEmbed(videoId, platform);
     setEmbedCount(prev => prev + 1);
     setShowPreview(true);
+
+    try {
+      const stored = JSON.parse(localStorage.getItem("embeds") || "[]");
+      stored.unshift({ url: videoUrl, code: embedHtml, date: new Date().toISOString() });
+      localStorage.setItem("embeds", JSON.stringify(stored.slice(0, 50)));
+    } catch {
+      localStorage.setItem(
+        "embeds",
+        JSON.stringify([{ url: videoUrl, code: embedHtml, date: new Date().toISOString() }])
+      );
+    }
   };
 
   const copyToClipboard = () => {
@@ -222,6 +233,9 @@ const Dashboard = () => {
             </span>
             {embedCount}/10 embeds used
           </div>
+          <Button variant="outline" size="sm" asChild>
+            <a href="/embeds">Past Embeds</a>
+          </Button>
           <Button variant="default" size="sm">Upgrade Pro</Button>
         </div>
       </header>
