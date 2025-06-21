@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,12 +13,13 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch";
+import { Rnd } from "react-rnd";
 
 
 const Dashboard = () => {
   const [videoUrl, setVideoUrl] = useState("");
-  const [width, setWidth] = useState([700]);
-  const [height, setHeight] = useState([400]);
+  const [width, setWidth] = useState([360]);
+  const [height, setHeight] = useState([640]);
   const [position, setPosition] = useState("center");
   const [autoplay, setAutoplay] = useState(false);
   const [controls, setControls] = useState(true);
@@ -28,6 +29,52 @@ const Dashboard = () => {
   const [showPreview, setShowPreview] = useState(false);
   const [previewPlatform, setPreviewPlatform] = useState("");
   const [previewVideoId, setPreviewVideoId] = useState("");
+
+  const updateEmbed = (id: string, platform: string) => {
+    let html = "";
+    const autoplayParam = autoplay ? "1" : "0";
+    const controlsParam = controls ? "1" : "0";
+    const justify = position === "left" ? "flex-start" : position === "right" ? "flex-end" : "center";
+
+    if (platform === "youtube") {
+      html = `<div style="display:flex;justify-content:${justify};width:100%;">
+  <iframe
+    width="${width[0]}"
+    height="${height[0]}"
+    src="https://www.youtube.com/embed/${id}?autoplay=${autoplayParam}&controls=${controlsParam}&modestbranding=1&rel=0&playsinline=1&fs=0"
+    title="YouTube video player"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen>
+  </iframe>
+</div>`;
+    } else if (platform === "tiktok") {
+      html = `<div style="display:flex;justify-content:${justify};width:100%;">
+  <blockquote class="tiktok-embed" cite="https://www.tiktok.com/@user/video/${id}" data-video-id="${id}" style="max-width: ${width[0]}px; min-width: 325px;">
+    <section><a target="_blank" href="https://www.tiktok.com/@user/video/${id}">TikTok Video</a></section>
+  </blockquote>
+  <script async src="https://www.tiktok.com/embed.js"></script>
+</div>`;
+    } else if (platform === "instagram") {
+      html = `<div style="display:flex;justify-content:${justify};width:100%;">
+  <blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/reel/${id}/" style="width: ${width[0]}px; max-width: ${width[0]}px;"></blockquote>
+  <script async src="//www.instagram.com/embed.js"></script>
+</div>`;
+    } else if (platform === "slides") {
+      let slidesSrc = id;
+      if (id.includes("docs.google.com")) slidesSrc = id.replace("/edit", "/embed");
+      html = `<div style="display:flex;justify-content:${justify};width:100%;">
+  <iframe width="${width[0]}" height="${height[0]}" src="${slidesSrc}" title="Slides presentation" frameborder="0" allowfullscreen></iframe>
+</div>`;
+    }
+    setEmbedCode(html);
+  };
+
+  useEffect(() => {
+    if (!showPreview) return;
+    if (!previewVideoId) return;
+    updateEmbed(previewVideoId, previewPlatform);
+  }, [width, height, position, autoplay, controls, previewVideoId, previewPlatform, showPreview]);
 
   const generateEmbedCode = () => {
     if (!videoUrl) return;
@@ -67,64 +114,7 @@ const Dashboard = () => {
     setPreviewPlatform(platform);
     setPreviewVideoId(videoId);
 
-    let embedHtml = "";
-    
-    if (platform === "youtube") {
-      const autoplayParam = autoplay ? "1" : "0";
-      const controlsParam = controls ? "1" : "0";
-      embedHtml = `<div style="display: flex; justify-content: ${position}; width: 100%;">
-  <iframe 
-    width="${width[0]}" 
-    height="${height[0]}"
-    src="https://www.youtube.com/embed/${videoId}?autoplay=${autoplayParam}&controls=${controlsParam}"
-    title="YouTube video player"
-    frameborder="0"
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-    allowfullscreen>
-  </iframe>
-</div>`;
-    } else if (platform === "tiktok") {
-      embedHtml = `<div style="display: flex; justify-content: ${position}; width: 100%;">
-  <blockquote 
-    class="tiktok-embed" 
-    cite="https://www.tiktok.com/@user/video/${videoId}"
-    data-video-id="${videoId}" 
-    style="max-width: ${width[0]}px; min-width: 325px;">
-    <section>
-      <a target="_blank" href="https://www.tiktok.com/@user/video/${videoId}">TikTok Video</a>
-    </section>
-  </blockquote>
-  <script async src="https://www.tiktok.com/embed.js"></script>
-</div>`;
-    } else if (platform === "instagram") {
-      embedHtml = `<div style="display: flex; justify-content: ${position}; width: 100%;">
-  <blockquote 
-    class="instagram-media" 
-    data-instgrm-permalink="https://www.instagram.com/reel/${videoId}/"
-    style="width: ${width[0]}px; max-width: ${width[0]}px;">
-  </blockquote>
-  <script async src="//www.instagram.com/embed.js"></script>
-</div>`;
-    } else if (platform === "slides") {
-      let slidesSrc = "";
-      if (videoId.includes("docs.google.com")) {
-        slidesSrc = videoId.replace("/edit", "/embed");
-      } else {
-        slidesSrc = videoId;
-      }
-      embedHtml = `<div style="display: flex; justify-content: ${position}; width: 100%;">
-  <iframe 
-    width="${width[0]}" 
-    height="${height[0]}"
-    src="${slidesSrc}"
-    title="Slides presentation"
-    frameborder="0"
-    allowfullscreen>
-  </iframe>
-</div>`;
-    }
-
-    setEmbedCode(embedHtml);
+    updateEmbed(videoId, platform);
     setEmbedCount(prev => prev + 1);
     setShowPreview(true);
   };
@@ -138,61 +128,77 @@ const Dashboard = () => {
   const renderPreview = () => {
     if (!showPreview || !previewVideoId) return null;
 
-    const justifyContent = position === "flex-start" ? "flex-start" : position === "flex-end" ? "flex-end" : "center";
+    const justifyContent = position === "left" ? "flex-start" : position === "right" ? "flex-end" : "center";
 
-    if (previewPlatform === "youtube") {
-      const autoplayParam = autoplay ? "1" : "0";
-      const controlsParam = controls ? "1" : "0";
-      return (
-        <div style={{ display: "flex", justifyContent, width: "100%" }}>
-          <iframe 
-            width={width[0]} 
+    const content = () => {
+      if (previewPlatform === "youtube") {
+        const autoplayParam = autoplay ? "1" : "0";
+        const controlsParam = controls ? "1" : "0";
+        return (
+          <iframe
+            width={width[0]}
             height={height[0]}
-            src={`https://www.youtube.com/embed/${previewVideoId}?autoplay=${autoplayParam}&controls=${controlsParam}`}
+            src={`https://www.youtube.com/embed/${previewVideoId}?autoplay=${autoplayParam}&controls=${controlsParam}&modestbranding=1&rel=0&playsinline=1&fs=0`}
             title="YouTube video player"
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
           />
-        </div>
-      );
-    } else if (previewPlatform === "slides") {
-      let slidesSrc = previewVideoId;
-      if (previewVideoId.includes("docs.google.com")) {
-        slidesSrc = previewVideoId.replace("/edit", "/embed");
+        );
       }
-      return (
-        <div style={{ display: "flex", justifyContent, width: "100%" }}>
-          <iframe 
-            width={width[0]} 
+
+      if (previewPlatform === "slides") {
+        let slidesSrc = previewVideoId;
+        if (previewVideoId.includes("docs.google.com")) {
+          slidesSrc = previewVideoId.replace("/edit", "/embed");
+        }
+        return (
+          <iframe
+            width={width[0]}
             height={height[0]}
             src={slidesSrc}
             title="Slides presentation"
             frameBorder="0"
             allowFullScreen
           />
-        </div>
-      );
-    }
+        );
+      }
 
-    return (
-      <div style={{ display: "flex", justifyContent, width: "100%" }}>
-        <div 
-          style={{ 
-            width: `${width[0]}px`, 
+      return (
+        <div
+          style={{
+            width: `${width[0]}px`,
             height: `${height[0]}px`,
             backgroundColor: "#f0f0f0",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             border: "1px solid #ddd",
-            borderRadius: "8px"
+            borderRadius: "8px",
           }}
         >
           <span className="text-muted-foreground">
             {previewPlatform === "tiktok" ? "TikTok Preview" : "Instagram Preview"}
           </span>
         </div>
+      );
+    };
+
+    return (
+      <div style={{ display: "flex", justifyContent, width: "100%" }}>
+        <Rnd
+          size={{ width: width[0], height: height[0] }}
+          onDragStop={(_, d) => {
+            // position is handled via flex, so just ignore drag values
+          }}
+          onResizeStop={(_, __, ref) => {
+            setWidth([parseInt(ref.style.width, 10)]);
+            setHeight([parseInt(ref.style.height, 10)]);
+          }}
+          bounds="parent"
+        >
+          {content()}
+        </Rnd>
       </div>
     );
   };
@@ -254,7 +260,7 @@ const Dashboard = () => {
                   <Label htmlFor="height">Height</Label>
                   <span className="text-sm text-gray-400">{height[0]}px</span>
                 </div>
-                <Slider id="height" min={150} max={800} step={10} value={height} onValueChange={setHeight} />
+                <Slider id="height" min={200} max={1000} step={10} value={height} onValueChange={setHeight} />
               </div>
             </div>
           </div>
