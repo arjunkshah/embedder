@@ -2,8 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Copy, Check, Settings, Eye, Presentation, Code } from "lucide-react";
-import { motion } from "framer-motion";
+import { ArrowLeft, Copy, Check, Settings, Presentation, Code, MoveRight } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import {
   Select,
@@ -11,15 +10,30 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Rnd } from "react-rnd";
+import { Helmet, HelmetProvider } from "react-helmet-async";
 
+declare global {
+  interface Window {
+    instgrm?: {
+      Embeds: {
+        process: () => void;
+      };
+    };
+    tiktok?: {
+      embed: {
+        render: () => void;
+      };
+    };
+  }
+}
 
 const Dashboard = () => {
   const [videoUrl, setVideoUrl] = useState("");
-  const [width, setWidth] = useState([360]);
-  const [height, setHeight] = useState([640]);
+  const [width, setWidth] = useState(320);
+  const [height, setHeight] = useState(568); // 9:16 aspect ratio
   const [position, setPosition] = useState("center");
   const [autoplay, setAutoplay] = useState(false);
   const [controls, setControls] = useState(true);
@@ -30,103 +44,93 @@ const Dashboard = () => {
   const [previewPlatform, setPreviewPlatform] = useState("");
   const [previewVideoId, setPreviewVideoId] = useState("");
 
-  const updateEmbed = (id: string, platform: string) => {
-    let html = "";
-    const autoplayParam = autoplay ? "1" : "0";
-    const controlsParam = controls ? "1" : "0";
-    const justify = position === "left" ? "flex-start" : position === "right" ? "flex-end" : "center";
-
-    if (platform === "youtube") {
-      html = `<div style="display:flex;justify-content:${justify};width:100%;">
-  <iframe
-    width="${width[0]}"
-    height="${height[0]}"
-    src="https://www.youtube.com/embed/${id}?autoplay=${autoplayParam}&controls=${controlsParam}&modestbranding=1&rel=0&playsinline=1&fs=0"
-    title="YouTube video player"
-    frameborder="0"
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-    allowfullscreen>
-  </iframe>
-</div>`;
-    } else if (platform === "tiktok") {
-      html = `<div style="display:flex;justify-content:${justify};width:100%;">
-  <blockquote class="tiktok-embed" cite="https://www.tiktok.com/@user/video/${id}" data-video-id="${id}" style="max-width: ${width[0]}px; min-width: 325px;">
-    <section><a target="_blank" href="https://www.tiktok.com/@user/video/${id}">TikTok Video</a></section>
-  </blockquote>
-  <script async src="https://www.tiktok.com/embed.js"></script>
-</div>`;
-    } else if (platform === "instagram") {
-      html = `<div style="display:flex;justify-content:${justify};width:100%;">
-  <blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/reel/${id}/" style="width: ${width[0]}px; max-width: ${width[0]}px;"></blockquote>
-  <script async src="//www.instagram.com/embed.js"></script>
-</div>`;
-    } else if (platform === "slides") {
-      let slidesSrc = id;
-      if (id.includes("docs.google.com")) slidesSrc = id.replace("/edit", "/embed");
-      html = `<div style="display:flex;justify-content:${justify};width:100%;">
-  <iframe width="${width[0]}" height="${height[0]}" src="${slidesSrc}" title="Slides presentation" frameborder="0" allowfullscreen></iframe>
-</div>`;
-    }
-    setEmbedCode(html);
-  };
+  const isVerticalVideo = ["youtube", "tiktok", "instagram"].includes(previewPlatform);
 
   useEffect(() => {
+    const storedEmbeds = localStorage.getItem("embeds");
+    if (storedEmbeds) {
+      setEmbedCount(JSON.parse(storedEmbeds).length);
+    }
+  }, []);
+  
+  useEffect(() => {
     if (!showPreview) return;
-    if (!previewVideoId) return;
-    updateEmbed(previewVideoId, previewPlatform);
-  }, [width, height, position, autoplay, controls, previewVideoId, previewPlatform, showPreview]);
+    generateEmbedCode(false); // Regenerate code on settings change, but don't increment count
 
-  const generateEmbedCode = () => {
-    if (!videoUrl) return;
+    if (previewPlatform === "instagram") {
+      window.instgrm?.Embeds.process();
+    }
+    if (previewPlatform === 'tiktok') {
+      window.tiktok?.embed.render();
+    }
+  }, [width, height, position, autoplay, controls]);
 
-    let videoId = "";
-    let platform = "";
+
+  const generateEmbedCode = (isNew = true) => {
+    if (!videoUrl && isNew) return;
+
+    let videoId = previewVideoId;
+    let platform = previewPlatform;
+    const justify = position === "left" ? "flex-start" : position === "right" ? "flex-end" : "center";
+
+    if (isNew) {
+      if (videoUrl.includes("youtube.com") || videoUrl.includes("youtu.be")) {
+        platform = "youtube";
+        const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?)|(shorts\/))\??v?=?([^#&?]*).*/;
+        const match = videoUrl.match(regExp);
+        videoId = match && match[8].length === 11 ? match[8] : "";
+      } else if (videoUrl.includes("tiktok.com")) {
+        platform = "tiktok";
+        const regExp = /tiktok\.com\/@[\w.-]+\/video\/(\d+)/;
+        const match = videoUrl.match(regExp);
+        videoId = match ? match[1] : "";
+      } else if (videoUrl.includes("instagram.com")) {
+        platform = "instagram";
+        const regExp = /instagram\.com\/(?:p|reel)\/([A-Za-z0-9_-]+)/;
+        const match = videoUrl.match(regExp);
+        videoId = match ? match[1] : "";
+      } else if (videoUrl.includes("slideshare.net") || videoUrl.includes("slides.com") || videoUrl.includes("docs.google.com/presentation")) {
+        platform = "slides";
+        videoId = videoUrl;
+      }
+
+      if (!videoId) {
+        alert("Please enter a valid YouTube, TikTok, Instagram, or Slides URL");
+        return;
+      }
+
+      setPreviewPlatform(platform);
+      setPreviewVideoId(videoId);
+      setShowPreview(true);
+      if(isNew) setEmbedCount(prev => prev + 1);
+    }
+
+    let html = "";
+    const autoplayParam = autoplay ? "1" : "0";
+    const controlsParam = controls ? "0" : "1";
+
+    if (platform === "youtube") {
+      const iframeWidth = height * (16 / 9);
+      html = `<div style="display:flex; justify-content:${justify}; width:100%;"><div style="width:${width}px; height:${height}px; overflow:hidden; position:relative;"><iframe src="https://www.youtube.com/embed/${videoId}?autoplay=${autoplayParam}&controls=${controlsParam}&showinfo=0&rel=0&modestbranding=1" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:${iframeWidth}px; height:${height}px;" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div></div>`;
+    } else if (platform === "tiktok") {
+      html = `<div style="display:flex;justify-content:${justify};width:100%;"><blockquote class="tiktok-embed" cite="https://www.tiktok.com/t/${videoId}" data-video-id="${videoId}" style="width:${width}px; height:${height}px;"></blockquote><script async src="https://www.tiktok.com/embed.js"></script></div>`;
+    } else if (platform === "instagram") {
+      html = `<div style="display:flex;justify-content:${justify};width:100%;"><blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/p/${videoId}/" style="width:${width}px;"></blockquote><script async src="//www.instagram.com/embed.js"></script></div>`;
+    } else if (platform === "slides") {
+      let slidesSrc = videoId.includes("docs.google.com") ? videoId.replace("/edit", "/embed") : videoId;
+      html = `<div style="display: flex; justify-content: ${justify}; width: 100%;"><iframe width="${width}" height="${height}" src="${slidesSrc}" title="Slides presentation" frameborder="0" allowfullscreen></iframe></div>`;
+    }
+
+    setEmbedCode(html);
     
-    // Enhanced URL detection
-    if (videoUrl.includes("youtube.com") || videoUrl.includes("youtu.be")) {
-      platform = "youtube";
-      const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?)|(shorts\/))\??v?=?([^#&?]*).*/;
-      const match = videoUrl.match(regExp);
-      videoId = match && match[8].length === 11 ? match[8] : "";
-    }
-    else if (videoUrl.includes("tiktok.com")) {
-      platform = "tiktok";
-      const regExp = /tiktok\.com\/@[\w.-]+\/video\/(\d+)/;
-      const match = videoUrl.match(regExp);
-      videoId = match ? match[1] : "";
-    }
-    else if (videoUrl.includes("instagram.com")) {
-      platform = "instagram";
-      const regExp = /instagram\.com\/(?:p|reel)\/([A-Za-z0-9_-]+)/;
-      const match = videoUrl.match(regExp);
-      videoId = match ? match[1] : "";
-    }
-    else if (videoUrl.includes("slideshare.net") || videoUrl.includes("slides.com") || videoUrl.includes("docs.google.com/presentation")) {
-      platform = "slides";
-      videoId = videoUrl;
-    }
-
-    if (!videoId) {
-      alert("Please enter a valid YouTube (including Shorts), TikTok, Instagram Reels, or Slides URL");
-      return;
-    }
-
-    setPreviewPlatform(platform);
-    setPreviewVideoId(videoId);
-
-    updateEmbed(videoId, platform);
-    setEmbedCount(prev => prev + 1);
-    setShowPreview(true);
-
-    try {
-      const stored = JSON.parse(localStorage.getItem("embeds") || "[]");
-      stored.unshift({ url: videoUrl, code: embedHtml, date: new Date().toISOString() });
-      localStorage.setItem("embeds", JSON.stringify(stored.slice(0, 50)));
-    } catch {
-      localStorage.setItem(
-        "embeds",
-        JSON.stringify([{ url: videoUrl, code: embedHtml, date: new Date().toISOString() }])
-      );
+    if (isNew) {
+      try {
+        const stored = JSON.parse(localStorage.getItem("embeds") || "[]");
+        stored.unshift({ url: videoUrl, code: html, date: new Date().toISOString() });
+        localStorage.setItem("embeds", JSON.stringify(stored.slice(0, 50)));
+      } catch {
+        localStorage.setItem("embeds", JSON.stringify([{ url: videoUrl, code: html, date: new Date().toISOString() }]));
+      }
     }
   };
 
@@ -139,212 +143,210 @@ const Dashboard = () => {
   const renderPreview = () => {
     if (!showPreview || !previewVideoId) return null;
 
-    const justifyContent = position === "left" ? "flex-start" : position === "right" ? "flex-end" : "center";
+    if (previewPlatform === 'youtube') {
+      const autoplayParam = autoplay ? "1" : "0";
+      const controlsParam = controls ? "0" : "1";
+      const iframeWidth = height * (16 / 9); // Calculate width to maintain 16:9 aspect ratio for the iframe
 
-    const content = () => {
-      if (previewPlatform === "youtube") {
-        const autoplayParam = autoplay ? "1" : "0";
-        const controlsParam = controls ? "1" : "0";
-        return (
+      return (
+        <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative', background: '#000' }}>
           <iframe
-            width={width[0]}
-            height={height[0]}
-            src={`https://www.youtube.com/embed/${previewVideoId}?autoplay=${autoplayParam}&controls=${controlsParam}&modestbranding=1&rel=0&playsinline=1&fs=0`}
-            title="YouTube video player"
+            src={`https://www.youtube.com/embed/${previewVideoId}?autoplay=${autoplayParam}&controls=${controlsParam}&showinfo=0&rel=0&modestbranding=1`}
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: `${iframeWidth}px`,
+              height: `${height}px`,
+            }}
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
           />
-        );
-      }
-
-      if (previewPlatform === "slides") {
-        let slidesSrc = previewVideoId;
-        if (previewVideoId.includes("docs.google.com")) {
-          slidesSrc = previewVideoId.replace("/edit", "/embed");
-        }
-        return (
-          <iframe
-            width={width[0]}
-            height={height[0]}
-            src={slidesSrc}
-            title="Slides presentation"
-            frameBorder="0"
-            allowFullScreen
-          />
-        );
-      }
-
-      return (
-        <div
-          style={{
-            width: `${width[0]}px`,
-            height: `${height[0]}px`,
-            backgroundColor: "#f0f0f0",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            border: "1px solid #ddd",
-            borderRadius: "8px",
-          }}
-        >
-          <span className="text-muted-foreground">
-            {previewPlatform === "tiktok" ? "TikTok Preview" : "Instagram Preview"}
-          </span>
         </div>
       );
-    };
+    }
 
-    return (
-      <div style={{ display: "flex", justifyContent, width: "100%" }}>
-        <Rnd
-          size={{ width: width[0], height: height[0] }}
-          onDragStop={(_, d) => {
-            // position is handled via flex, so just ignore drag values
-          }}
-          onResizeStop={(_, __, ref) => {
-            setWidth([parseInt(ref.style.width, 10)]);
-            setHeight([parseInt(ref.style.height, 10)]);
-          }}
-          bounds="parent"
-        >
-          {content()}
-        </Rnd>
-      </div>
-    );
+    if (previewPlatform === 'instagram') {
+      return (
+        <>
+          <Helmet>
+            <script async src="//www.instagram.com/embed.js" />
+          </Helmet>
+          <blockquote
+            className="instagram-media"
+            data-instgrm-permalink={`https://www.instagram.com/p/${previewVideoId}/`}
+            style={{ width: '100%' }}
+          />
+        </>
+      );
+    }
+    
+    if (previewPlatform === 'tiktok') {
+        return (
+            <>
+                <Helmet>
+                    <script async src="https://www.tiktok.com/embed.js"/>
+                </Helmet>
+                <blockquote
+                    className="tiktok-embed"
+                    cite={`https://www.tiktok.com/t/${previewVideoId}`}
+                    data-video-id={previewVideoId}
+                    style={{width: '100%', height: '100%'}}
+                >
+                </blockquote>
+            </>
+        )
+    }
+
+    if (previewPlatform === "slides") {
+      let slidesSrc = previewVideoId.includes("docs.google.com") ? previewVideoId.replace("/edit", "/embed") : previewVideoId;
+      return <iframe width="100%" height="100%" src={slidesSrc} title="Slides presentation" frameBorder="0" allowFullScreen />;
+    }
+
+    return null;
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <header className="flex justify-between items-center p-4 border-b border-gray-800">
+    <HelmetProvider>
+      <div className="min-h-screen bg-gray-900 text-white font-sans">
+        <header className="flex justify-between items-center p-4 border-b border-gray-800">
         <div className="flex items-center gap-4">
-        <a href="/" className="flex items-center gap-2 text-sm text-gray-400 hover:text-white">
-          <ArrowLeft className="w-4 h-4" />
-          Home
-        </a>
-        <div className="w-px h-6 bg-gray-800" />
-        <h1 className="text-xl font-semibold">EmbedGen</h1>
+          <a href="/" className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
+            <ArrowLeft className="w-4 h-4" />
+            Home
+          </a>
+          <div className="w-px h-6 bg-gray-700" />
+          <h1 className="text-xl font-semibold tracking-tight">EmbedGen</h1>
         </div>
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 text-sm">
-            <span className="relative flex h-3 w-3">
+          <div className="flex items-center gap-2 text-sm text-gray-300">
+            <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
             </span>
             {embedCount}/10 embeds used
           </div>
-          <Button variant="outline" size="sm" asChild>
+          <Button variant="ghost" size="sm" asChild>
             <a href="/embeds">Past Embeds</a>
           </Button>
-          <Button variant="default" size="sm">Upgrade Pro</Button>
+          <Button size="sm" className="bg-white text-black hover:bg-gray-200">
+            Upgrade Pro
+          </Button>
         </div>
       </header>
-      
-      <div className="flex">
-        {/* Left Sidebar */}
-        <aside className="w-1/4 p-6 border-r border-gray-800 space-y-8">
-          <div>
-            <Label htmlFor="content-url" className="flex items-center gap-2 mb-2 text-base font-medium text-gray-300">
-              <Settings className="w-5 h-5" />
-              Content URL
-            </Label>
-            <Input
-              id="content-url"
-              type="url"
-              placeholder="Paste YouTube, TikTok, Instagram"
-              value={videoUrl}
-              onChange={(e) => setVideoUrl(e.target.value)}
-              className="bg-gray-800 border-gray-700 focus:ring-blue-500"
-            />
-            <p className="text-xs text-gray-500 mt-2">Supports: YouTube, TikTok, Instagram Reels, Google Slides, SlideShare</p>
-          </div>
+        
+        <div className="flex" style={{ height: "calc(100vh - 65px)" }}>
+          {/* Left Sidebar */}
+          <aside className="w-[350px] p-6 border-r border-gray-800 space-y-6 overflow-y-auto">
+            <div className="space-y-2">
+              <Label htmlFor="content-url" className="text-sm font-medium text-gray-400 flex items-center gap-2">
+                <Settings className="w-4 h-4" />
+                Content URL
+              </Label>
+              <Input
+                id="content-url"
+                type="url"
+                placeholder="Paste YouTube, TikTok, Instagram..."
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                className="bg-gray-800 border-gray-700 focus:ring-blue-500 text-sm"
+              />
+              <p className="text-xs text-gray-500">Supports: YouTube, TikTok, Instagram Reels, Google Slides</p>
+            </div>
 
-          <div>
-            <h3 className="mb-4 text-base font-medium text-gray-300">Dimensions</h3>
             <div className="space-y-4">
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <Label htmlFor="width">Width</Label>
-                  <span className="text-sm text-gray-400">{width[0]}px</span>
-                </div>
-                <Slider id="width" min={200} max={1200} step={10} value={width} onValueChange={setWidth} />
-              </div>
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <Label htmlFor="height">Height</Label>
-                  <span className="text-sm text-gray-400">{height[0]}px</span>
-                </div>
-                <Slider id="height" min={200} max={1000} step={10} value={height} onValueChange={setHeight} />
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <Label htmlFor="position" className="text-base font-medium text-gray-300">Position</Label>
-            <Select value={position} onValueChange={setPosition}>
-              <SelectTrigger className="w-full mt-2 bg-gray-800 border-gray-700">
-                <SelectValue placeholder="Select position" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="left">Left</SelectItem>
-                <SelectItem value="center">Center</SelectItem>
-                <SelectItem value="right">Right</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <h3 className="mb-4 text-base font-medium text-gray-300">Options</h3>
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <Switch id="autoplay" checked={autoplay} onCheckedChange={setAutoplay} />
-                <Label htmlFor="autoplay" className="font-normal">Autoplay (YouTube/Slides only)</Label>
-              </div>
-              <div className="flex items-center gap-3">
-                <Switch id="controls" checked={controls} onCheckedChange={setControls} />
-                <Label htmlFor="controls" className="font-normal">Show controls</Label>
-              </div>
-            </div>
-          </div>
-          
-          <Button onClick={generateEmbedCode} className="w-full bg-blue-600 hover:bg-blue-700">Generate Embed</Button>
-
-        </aside>
-
-        {/* Main Content */}
-        <main className="w-3/4 p-6">
-          <div className="bg-gray-800/50 rounded-lg h-full flex flex-col items-center justify-center">
-            {showPreview ? (
-              <div className="w-full h-full flex flex-col">
-                <div className="flex-grow flex items-center justify-center">
-                  {renderPreview()}
-                </div>
-                <div className="p-4 border-t border-gray-800">
-                  <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-lg font-semibold flex items-center gap-2"><Code className="w-5 h-5"/>Embed Code</h3>
-                    <Button variant="ghost" size="sm" onClick={copyToClipboard}>
-                      {copied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
-                      {copied ? 'Copied!' : 'Copy Code'}
-                    </Button>
+              <h3 className="text-sm font-medium text-gray-400">Dimensions</h3>
+              <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="width" className="text-xs">Width ({width}px)</Label>
+                    <Slider id="width" min={200} max={1200} step={2} value={[width]} onValueChange={([val]) => setWidth(val)} />
                   </div>
-                  <pre className="bg-gray-900 p-4 rounded-md text-sm overflow-x-auto">
-                    <code>{embedCode}</code>
-                  </pre>
-                </div>
+                  <div>
+                    <Label htmlFor="height" className="text-xs">Height ({height}px)</Label>
+                    <Slider id="height" min={150} max={1000} step={2} value={[height]} onValueChange={([val]) => setHeight(val)} />
+                  </div>
               </div>
-            ) : (
-              <div className="text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Presentation className="h-8 w-8 text-white" />
-                </div>
-                <h2 className="text-2xl font-bold text-white">Ready to Generate</h2>
-                <p className="text-gray-400 mt-2">Paste a URL and click generate to see your embed preview</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="position" className="text-sm font-medium text-gray-400">Position</Label>
+              <Select value={position} onValueChange={setPosition}>
+                <SelectTrigger className="w-full bg-gray-800 border-gray-700 text-sm">
+                  <SelectValue placeholder="Select position" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="left">Left</SelectItem>
+                  <SelectItem value="center">Center</SelectItem>
+                  <SelectItem value="right">Right</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium text-gray-400">Options</h3>
+              <div className="flex items-center justify-between bg-gray-800/50 p-3 rounded-md">
+                <Label htmlFor="autoplay" className="font-normal text-sm">Autoplay (YouTube/Slides)</Label>
+                <Switch id="autoplay" checked={autoplay} onCheckedChange={setAutoplay} />
               </div>
-            )}
-          </div>
-        </main>
+              <div className="flex items-center justify-between bg-gray-800/50 p-3 rounded-md">
+                <Label htmlFor="controls" className="font-normal text-sm">Show controls</Label>
+                <Switch id="controls" checked={controls} onCheckedChange={setControls} />
+              </div>
+            </div>
+            
+            <Button onClick={() => generateEmbedCode(true)} className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:opacity-90 transition-opacity flex items-center gap-2">
+              Generate Embed <MoveRight className="w-4 h-4" />
+            </Button>
+          </aside>
+
+          {/* Main Content */}
+          <main className="flex-1 p-6 flex flex-col bg-black/20">
+              <div className="flex-1 rounded-lg flex items-center justify-center relative bg-grid-gray-800/[0.2]">
+                <div className="absolute pointer-events-none inset-0 flex items-center justify-center bg-black/80 [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]"></div>
+
+                  {showPreview ? (
+                    <Rnd
+                      size={{ width, height }}
+                      onResize={(e, direction, ref, delta, position) => {
+                        setWidth(parseInt(ref.style.width));
+                        setHeight(parseInt(ref.style.height));
+                      }}
+                      className="flex items-center justify-center border border-dashed border-gray-700"
+                      lockAspectRatio={isVerticalVideo ? 9 / 16 : undefined}
+                    >
+                    {renderPreview()}
+                    </Rnd>
+                  ) : (
+                    <div className="text-center">
+                      <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Presentation className="h-8 w-8 text-white" />
+                      </div>
+                      <h2 className="text-2xl font-bold text-white">Ready to Generate</h2>
+                      <p className="text-gray-400 mt-2">Paste a URL to see a preview of your embed</p>
+                    </div>
+                  )}
+              </div>
+
+              {showPreview && (
+                  <div className="mt-6">
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="text-lg font-semibold flex items-center gap-2"><Code className="w-5 h-5"/>Embed Code</h3>
+                      <Button variant="ghost" size="sm" onClick={copyToClipboard}>
+                        {copied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
+                        {copied ? 'Copied!' : 'Copy Code'}
+                      </Button>
+                    </div>
+                    <pre className="bg-gray-800 p-4 rounded-md text-sm overflow-x-auto">
+                      <code className="font-mono">{embedCode}</code>
+                    </pre>
+                  </div>
+              )}
+          </main>
+        </div>
       </div>
-    </div>
+    </HelmetProvider>
   );
 };
 
