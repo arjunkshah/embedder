@@ -143,7 +143,7 @@ const Dashboard = () => {
 
     let html = "";
     const autoplayParam = autoplay ? "1" : "0";
-    const controlsParam = controls ? "0" : "1";
+    const controlsParam = controls ? "1" : "0";
 
     if (platform === "youtube") {
       const iframeHeight = width * (16 / 9);
@@ -210,7 +210,7 @@ const Dashboard = () => {
 
     if (previewPlatform === 'youtube') {
       const autoplayParam = autoplay ? "1" : "0";
-      const controlsParam = controls ? "0" : "1";
+      const controlsParam = controls ? "1" : "0";
       const iframeHeight = width * (16 / 9);
       const embedUrl = `https://www.youtube.com/embed/${previewVideoId}?autoplay=${autoplayParam}&controls=${controlsParam}&showinfo=0&rel=0&modestbranding=1`;
 
