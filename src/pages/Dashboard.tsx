@@ -110,8 +110,8 @@ const Dashboard = () => {
     const controlsParam = controls ? "0" : "1";
 
     if (platform === "youtube") {
-      const iframeWidth = height * (16 / 9);
-      html = `<div style="display:flex; justify-content:${justify}; width:100%;"><div style="width:${width}px; height:${height}px; overflow:hidden; position:relative;"><iframe src="https://www.youtube.com/embed/${videoId}?autoplay=${autoplayParam}&controls=${controlsParam}&showinfo=0&rel=0&modestbranding=1" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:${iframeWidth}px; height:${height}px;" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div></div>`;
+      const iframeHeight = width * (16 / 9);
+      html = `<div style="display:flex; justify-content:${justify}; width:100%;"><div style="width:${width}px; height:${height}px; overflow:hidden; position:relative; background-color:#000;"><iframe src="https://www.youtube.com/embed/${videoId}?autoplay=${autoplayParam}&controls=${controlsParam}&showinfo=0&rel=0&modestbranding=1" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:${width}px; height:${iframeHeight}px;" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div></div>`;
     } else if (platform === "tiktok") {
       html = `<div style="display:flex;justify-content:${justify};width:100%;"><blockquote class="tiktok-embed" cite="https://www.tiktok.com/t/${videoId}" data-video-id="${videoId}" style="width:${width}px; height:${height}px;"></blockquote><script async src="https://www.tiktok.com/embed.js"></script></div>`;
     } else if (platform === "instagram") {
@@ -156,7 +156,7 @@ const Dashboard = () => {
     if (previewPlatform === 'youtube') {
       const autoplayParam = autoplay ? "1" : "0";
       const controlsParam = controls ? "0" : "1";
-      const iframeWidth = height * (16 / 9); // Calculate width to maintain 16:9 aspect ratio for the iframe
+      const iframeHeight = width * (16 / 9);
 
       return (
         <div
@@ -165,6 +165,7 @@ const Dashboard = () => {
             height: "100%",
             overflow: "hidden",
             position: "relative",
+            backgroundColor: "#000",
           }}
         >
           <iframe
@@ -174,8 +175,8 @@ const Dashboard = () => {
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              width: `${iframeWidth}px`,
-              height: `${height}px`,
+              width: `${width}px`,
+              height: `${iframeHeight}px`,
             }}
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
