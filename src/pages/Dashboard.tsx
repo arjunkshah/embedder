@@ -14,6 +14,12 @@ import {
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch";
 import { Rnd } from "react-rnd";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from "@/components/ui/tabs";
 
 
 const Dashboard = () => {
@@ -24,6 +30,12 @@ const Dashboard = () => {
   const [autoplay, setAutoplay] = useState(false);
   const [controls, setControls] = useState(true);
   const [embedCode, setEmbedCode] = useState("");
+  const [snippets, setSnippets] = useState({
+    html: "",
+    react: "",
+    markdown: "",
+  });
+  const [language, setLanguage] = useState("html");
   const [copied, setCopied] = useState(false);
   const [embedCount, setEmbedCount] = useState(3);
   const [showPreview, setShowPreview] = useState(false);
@@ -67,7 +79,11 @@ const Dashboard = () => {
   <iframe width="${width[0]}" height="${height[0]}" src="${slidesSrc}" title="Slides presentation" frameborder="0" allowfullscreen></iframe>
 </div>`;
     }
+    const reactSnippet = `<div dangerouslySetInnerHTML={{ __html: \`${html.replace(/`/g, "\\`")}\` }} />`;
+    const markdownSnippet = `\u0060\u0060\u0060html\n${html}\n\u0060\u0060\u0060`;
     setEmbedCode(html);
+    setSnippets({ html, react: reactSnippet, markdown: markdownSnippet });
+    return html;
   };
 
   useEffect(() => {
@@ -114,7 +130,7 @@ const Dashboard = () => {
     setPreviewPlatform(platform);
     setPreviewVideoId(videoId);
 
-    updateEmbed(videoId, platform);
+    const embedHtml = updateEmbed(videoId, platform);
     setEmbedCount(prev => prev + 1);
     setShowPreview(true);
 
@@ -131,7 +147,7 @@ const Dashboard = () => {
   };
 
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(embedCode);
+    navigator.clipboard.writeText(snippets[language as keyof typeof snippets]);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -327,9 +343,28 @@ const Dashboard = () => {
                       {copied ? 'Copied!' : 'Copy Code'}
                     </Button>
                   </div>
-                  <pre className="bg-gray-900 p-4 rounded-md text-sm overflow-x-auto">
-                    <code>{embedCode}</code>
-                  </pre>
+                  <Tabs value={language} onValueChange={setLanguage} className="w-full">
+                    <TabsList>
+                      <TabsTrigger value="html">HTML</TabsTrigger>
+                      <TabsTrigger value="react">React</TabsTrigger>
+                      <TabsTrigger value="markdown">Markdown</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="html">
+                      <pre className="bg-gray-900 p-4 rounded-md text-sm overflow-x-auto">
+                        <code>{snippets.html}</code>
+                      </pre>
+                    </TabsContent>
+                    <TabsContent value="react">
+                      <pre className="bg-gray-900 p-4 rounded-md text-sm overflow-x-auto">
+                        <code>{snippets.react}</code>
+                      </pre>
+                    </TabsContent>
+                    <TabsContent value="markdown">
+                      <pre className="bg-gray-900 p-4 rounded-md text-sm overflow-x-auto">
+                        <code>{snippets.markdown}</code>
+                      </pre>
+                    </TabsContent>
+                  </Tabs>
                 </div>
               </div>
             ) : (
