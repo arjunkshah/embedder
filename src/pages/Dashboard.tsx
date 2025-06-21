@@ -29,7 +29,6 @@ const Dashboard = () => {
   const [position, setPosition] = useState("center");
   const [autoplay, setAutoplay] = useState(false);
   const [controls, setControls] = useState(true);
-  const [embedCode, setEmbedCode] = useState("");
   const [snippets, setSnippets] = useState({
     html: "",
     react: "",
@@ -81,7 +80,6 @@ const Dashboard = () => {
     }
     const reactSnippet = `<div dangerouslySetInnerHTML={{ __html: \`${html.replace(/`/g, "\\`")}\` }} />`;
     const markdownSnippet = `\u0060\u0060\u0060html\n${html}\n\u0060\u0060\u0060`;
-    setEmbedCode(html);
     setSnippets({ html, react: reactSnippet, markdown: markdownSnippet });
     return html;
   };
