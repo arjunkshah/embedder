@@ -41,6 +41,7 @@ const Dashboard = () => {
   const [copied, setCopied] = useState(false);
   const [embedCount, setEmbedCount] = useState(3);
   const [showPreview, setShowPreview] = useState(false);
+  const [showCode, setShowCode] = useState(false);
   const [previewPlatform, setPreviewPlatform] = useState("");
   const [previewVideoId, setPreviewVideoId] = useState("");
 
@@ -55,18 +56,17 @@ const Dashboard = () => {
   
   useEffect(() => {
     if (!showPreview) return;
-    generateEmbedCode(false); // Regenerate code on settings change, but don't increment count
 
     if (previewPlatform === "instagram") {
       window.instgrm?.Embeds.process();
     }
-    if (previewPlatform === 'tiktok') {
+    if (previewPlatform === "tiktok") {
       window.tiktok?.embed.render();
     }
-  }, [width, height, position, autoplay, controls]);
+  }, [width, height, position, autoplay, controls, showPreview, previewPlatform]);
 
 
-  const generateEmbedCode = (isNew = true) => {
+  const generateEmbedCode = (isNew = true, save = true) => {
     if (!videoUrl && isNew) return;
 
     let videoId = previewVideoId;
@@ -102,7 +102,7 @@ const Dashboard = () => {
       setPreviewPlatform(platform);
       setPreviewVideoId(videoId);
       setShowPreview(true);
-      if(isNew) setEmbedCount(prev => prev + 1);
+      if (isNew && save) setEmbedCount(prev => prev + 1);
     }
 
     let html = "";
@@ -123,7 +123,7 @@ const Dashboard = () => {
 
     setEmbedCode(html);
     
-    if (isNew) {
+    if (save) {
       try {
         const stored = JSON.parse(localStorage.getItem("embeds") || "[]");
         stored.unshift({ url: videoUrl, code: html, date: new Date().toISOString() });
@@ -138,6 +138,16 @@ const Dashboard = () => {
     navigator.clipboard.writeText(embedCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleGenerate = () => {
+    if (!showPreview) {
+      generateEmbedCode(true, false);
+      setShowCode(false);
+    } else {
+      generateEmbedCode(false, true);
+      setShowCode(true);
+    }
   };
 
   const renderPreview = () => {
@@ -303,7 +313,7 @@ const Dashboard = () => {
               </div>
             </div>
             
-            <Button onClick={() => generateEmbedCode(true)} className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:opacity-90 transition-opacity flex items-center gap-2">
+            <Button onClick={handleGenerate} className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:opacity-90 transition-opacity flex items-center gap-2">
               Generate Embed <MoveRight className="w-4 h-4" />
             </Button>
           </aside>
@@ -336,7 +346,7 @@ const Dashboard = () => {
                   )}
               </div>
 
-              {showPreview && (
+              {showCode && (
                   <div className="mt-6">
                     <div className="flex justify-between items-center mb-2">
                       <h3 className="text-lg font-semibold flex items-center gap-2"><Code className="w-5 h-5"/>Embed Code</h3>
