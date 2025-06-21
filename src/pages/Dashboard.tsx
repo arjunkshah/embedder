@@ -2,8 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Copy, Check, Settings, Eye, Presentation, Code } from "lucide-react";
-import { motion } from "framer-motion";
+import { ArrowLeft, Copy, Check, Settings, Presentation, Code } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import {
   Carousel,
@@ -18,7 +17,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 
 
@@ -32,13 +31,11 @@ const Dashboard = () => {
   const [borderRadius, setBorderRadius] = useState([8]);
   const [bgColor, setBgColor] = useState("#f0f0f0");
   const [orientation, setOrientation] = useState("horizontal");
-  const [previewEmbeds, setPreviewEmbeds] = useState<{platform: string; videoId: string}[]>([]);
+  const [previewEmbeds, setPreviewEmbeds] = useState<{ platform: string; videoId: string }[]>([]);
   const [embedCode, setEmbedCode] = useState("");
   const [copied, setCopied] = useState(false);
   const [embedCount, setEmbedCount] = useState(3);
   const [showPreview, setShowPreview] = useState(false);
-  const [previewPlatform, setPreviewPlatform] = useState("");
-  const [previewVideoId, setPreviewVideoId] = useState("");
 
   const generateEmbedCode = () => {
     const urls = urlsText.split(/\n+/).map((u) => u.trim()).filter(Boolean);
@@ -75,8 +72,6 @@ const Dashboard = () => {
     }
 
     setPreviewEmbeds(embeds);
-    setPreviewPlatform(embeds[0].platform);
-    setPreviewVideoId(embeds[0].videoId);
 
     let embedHtml = "";
 
