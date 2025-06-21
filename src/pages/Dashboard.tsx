@@ -68,6 +68,7 @@ const Dashboard = () => {
 </div>`;
     }
     setEmbedCode(html);
+    return html;
   };
 
   useEffect(() => {
@@ -114,18 +115,18 @@ const Dashboard = () => {
     setPreviewPlatform(platform);
     setPreviewVideoId(videoId);
 
-    updateEmbed(videoId, platform);
+    const html = updateEmbed(videoId, platform);
     setEmbedCount(prev => prev + 1);
     setShowPreview(true);
 
     try {
       const stored = JSON.parse(localStorage.getItem("embeds") || "[]");
-      stored.unshift({ url: videoUrl, code: embedHtml, date: new Date().toISOString() });
+      stored.unshift({ url: videoUrl, code: html, date: new Date().toISOString() });
       localStorage.setItem("embeds", JSON.stringify(stored.slice(0, 50)));
     } catch {
       localStorage.setItem(
         "embeds",
-        JSON.stringify([{ url: videoUrl, code: embedHtml, date: new Date().toISOString() }])
+        JSON.stringify([{ url: videoUrl, code: html, date: new Date().toISOString() }])
       );
     }
   };
@@ -313,13 +314,13 @@ const Dashboard = () => {
 
         {/* Main Content */}
         <main className="w-3/4 p-6">
-          <div className="bg-gray-800/50 rounded-lg h-full flex flex-col items-center justify-center">
+          <div className="bg-gray-800/50 rounded-lg h-full flex flex-col items-center justify-center p-6">
             {showPreview ? (
-              <div className="w-full h-full flex flex-col">
-                <div className="flex-grow flex items-center justify-center">
+              <>
+                <div className="mb-6 flex items-center justify-center w-full">
                   {renderPreview()}
                 </div>
-                <div className="p-4 border-t border-gray-800">
+                <div className="w-full border-t border-gray-800 pt-4">
                   <div className="flex justify-between items-center mb-2">
                     <h3 className="text-lg font-semibold flex items-center gap-2"><Code className="w-5 h-5"/>Embed Code</h3>
                     <Button variant="ghost" size="sm" onClick={copyToClipboard}>
@@ -331,7 +332,7 @@ const Dashboard = () => {
                     <code>{embedCode}</code>
                   </pre>
                 </div>
-              </div>
+              </>
             ) : (
               <div className="text-center">
                 <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
