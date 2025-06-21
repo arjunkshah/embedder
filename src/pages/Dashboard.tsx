@@ -169,9 +169,11 @@ const Dashboard = () => {
         if (!stored.find(item => item.code === html)) {
             stored.unshift({ url: videoUrl, code: html, date: new Date().toISOString() });
             localStorage.setItem("embeds", JSON.stringify(stored.slice(0, 50)));
+            setEmbedCount(stored.length);
         }
       } catch {
         localStorage.setItem("embeds", JSON.stringify([{ url: videoUrl, code: html, date: new Date().toISOString() }]));
+        setEmbedCount(1);
       }
     }
   };
@@ -298,9 +300,22 @@ const Dashboard = () => {
           <div>
             <div className="flex items-center justify-between mb-6">
               <h1 className="text-2xl font-bold">Embed Generator</h1>
-              <span className="text-sm font-medium">
+              <Link to="/embeds">
+                <Button variant="outline" size="sm">View Gallery</Button>
+              </Link>
+            </div>
+
+            <div className="space-y-2 mb-4">
+              <Label className="text-sm font-medium">Plan: {userPlan.name}</Label>
+              <div className="w-full bg-muted rounded-full h-2.5">
+                <div 
+                  className="bg-primary h-2.5 rounded-full" 
+                  style={{ width: `${(embedCount / userPlan.limit) * 100}%` }}
+                ></div>
+              </div>
+              <p className="text-sm text-muted-foreground text-right">
                 {embedCount} / {userPlan.limit === Infinity ? 'Unlimited' : userPlan.limit} embeds
-              </span>
+              </p>
             </div>
 
             <div className="space-y-6">
