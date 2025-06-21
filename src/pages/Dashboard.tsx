@@ -106,9 +106,9 @@ const Dashboard = () => {
         if (tempUrl.includes("/shorts/")) {
           tempUrl = tempUrl.replace("/shorts/", "/embed/");
         }
-        const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
         const match = tempUrl.match(regExp);
-        videoId = match && match[8].length === 11 ? match[8] : "";
+        videoId = (match && match[2].length === 11) ? match[2] : "";
       } else if (videoUrl.includes("tiktok.com")) {
         platform = "tiktok";
         const regExp = /tiktok\.com\/@[\w.-]+\/video\/(\d+)/;
