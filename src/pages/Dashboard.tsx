@@ -38,15 +38,17 @@ const Dashboard = () => {
 
     if (platform === "youtube") {
       html = `<div style="display:flex;justify-content:${justify};width:100%;">
-  <iframe
-    width="${width[0]}"
-    height="${height[0]}"
-    src="https://www.youtube.com/embed/${id}?autoplay=${autoplayParam}&controls=${controlsParam}&modestbranding=1&rel=0&playsinline=1&fs=0"
-    title="YouTube video player"
-    frameborder="0"
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-    allowfullscreen>
-  </iframe>
+  <div style="overflow:hidden;width:${width[0]}px;height:${height[0]}px;">
+    <iframe
+      width="100%"
+      height="100%"
+      src="https://www.youtube.com/embed/${id}?autoplay=${autoplayParam}&controls=${controlsParam}&modestbranding=1&rel=0&playsinline=1&fs=0"
+      title="YouTube video player"
+      frameborder="0"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen
+    ></iframe>
+  </div>
 </div>`;
     } else if (platform === "tiktok") {
       html = `<div style="display:flex;justify-content:${justify};width:100%;">
@@ -146,15 +148,17 @@ const Dashboard = () => {
         const autoplayParam = autoplay ? "1" : "0";
         const controlsParam = controls ? "1" : "0";
         return (
-          <iframe
-            width={width[0]}
-            height={height[0]}
-            src={`https://www.youtube.com/embed/${previewVideoId}?autoplay=${autoplayParam}&controls=${controlsParam}&modestbranding=1&rel=0&playsinline=1&fs=0`}
-            title="YouTube video player"
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
+          <div style={{ width: width[0], height: height[0], overflow: "hidden" }}>
+            <iframe
+              width="100%"
+              height="100%"
+              src={`https://www.youtube.com/embed/${previewVideoId}?autoplay=${autoplayParam}&controls=${controlsParam}&modestbranding=1&rel=0&playsinline=1&fs=0`}
+              title="YouTube video player"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
         );
       }
 
@@ -199,6 +203,7 @@ const Dashboard = () => {
       <div style={{ display: "flex", justifyContent, width: "100%" }}>
         <Rnd
           size={{ width: width[0], height: height[0] }}
+          style={{ overflow: "hidden" }}
           onDragStop={(_, d) => {
             // position is handled via flex, so just ignore drag values
           }}
