@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useRef } from "react";
@@ -320,119 +319,97 @@ const Shader: React.FC<ShaderProps> = ({ source, uniforms }) => {
 };
 
 export const SignInPage = ({ className }: SignInPageProps) => {
+  const [isRegistering, setIsRegistering] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLogin, setIsLogin] = useState(true);
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const [error, setError] = useState("");
+  
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate login/signup
-    window.location.href = "/dashboard";
+    setError("");
+
+    const url = isRegistering ? "/api/register" : "/api/login";
+    try {
+      const response = await fetch(`http://localhost:3001${url}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        if (isRegistering) {
+          setIsRegistering(false);
+          setError("Registration successful! Please log in.");
+        } else {
+          localStorage.setItem("token", data.token);
+          // Redirect to dashboard or home page
+          window.location.href = "/dashboard";
+        }
+      } else {
+        setError(data.message);
+      }
+    } catch (err) {
+      setError("An unexpected error occurred.");
+    }
   };
 
   return (
-    <div className={cn("flex w-[100%] flex-col min-h-screen bg-black relative", className)}>
-      <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0">
-          <CanvasRevealEffect
-            animationSpeed={3}
-            containerClassName="bg-black"
-            colors={[
-              [255, 255, 255],
-              [255, 255, 255],
-            ]}
-            dotSize={6}
-            reverse={false}
+    <div className={cn("min-h-screen bg-black text-white", className)}>
+      <div className="container mx-auto px-4 relative z-10">
+        <h1 className="text-4xl md:text-7xl bg-clip-text text-transparent bg-gradient-to-b from-neutral-200 to-neutral-600 text-center font-sans font-bold pt-20">
+          {isRegistering ? "Create an Account" : "Sign In"}
+        </h1>
+        <p className="text-neutral-500 max-w-lg mx-auto my-2 text-sm text-center">
+          {isRegistering
+            ? "Join us to start creating amazing video embeds."
+            : "Welcome back! Enter your details to continue."}
+        </p>
+        <form onSubmit={handleSubmit} className="max-w-md mx-auto mt-8">
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full bg-zinc-800 text-white placeholder-zinc-500 px-4 py-2 rounded-md mb-4"
           />
-        </div>
-        
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(0,0,0,1)_0%,_transparent_100%)]" />
-        <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-black to-transparent" />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full bg-zinc-800 text-white placeholder-zinc-500 px-4 py-2 rounded-md mb-4"
+          />
+          {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+          <button
+            type="submit"
+            className="w-full bg-white text-black font-bold py-2 rounded-md"
+          >
+            {isRegistering ? "Register" : "Sign In"}
+          </button>
+        </form>
+        <p className="text-center mt-4 text-sm">
+          {isRegistering ? "Already have an account?" : "Don't have an account?"}{" "}
+          <button
+            onClick={() => {
+              setIsRegistering(!isRegistering);
+              setError("");
+            }}
+            className="text-blue-500 hover:underline"
+          >
+            {isRegistering ? "Sign In" : "Register"}
+          </button>
+        </p>
       </div>
-      
-      <div className="relative z-10 flex flex-col flex-1">
-        <div className="absolute top-6 left-6">
-          <a href="/" className="flex items-center gap-2 text-white hover:text-white/80 transition-colors">
-            ← Back to Home
-          </a>
-        </div>
-
-        <div className="flex flex-1 flex-col lg:flex-row ">
-          <div className="flex-1 flex flex-col justify-center items-center">
-            <div className="w-full mt-[150px] max-w-sm">
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
-                className="space-y-6 text-center"
-              >
-                <div className="space-y-1">
-                  <h1 className="text-[2.5rem] font-bold leading-[1.1] tracking-tight text-white">
-                    {isLogin ? "Welcome Back" : "Create Account"}
-                  </h1>
-                  <p className="text-[1.2rem] text-white/70 font-light">
-                    {isLogin ? "Sign in to your account" : "Start generating embed codes"}
-                  </p>
-                </div>
-                
-                <div className="space-y-4">
-                  <button className="backdrop-blur-[2px] w-full flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-full py-3 px-4 transition-colors">
-                    <span className="text-lg">G</span>
-                    <span>Sign in with Google</span>
-                  </button>
-                  
-                  <div className="flex items-center gap-4">
-                    <div className="h-px bg-white/10 flex-1" />
-                    <span className="text-white/40 text-sm">or</span>
-                    <div className="h-px bg-white/10 flex-1" />
-                  </div>
-                  
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <input 
-                      type="email" 
-                      placeholder="Email address"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full backdrop-blur-[1px] text-white bg-white/5 border border-white/10 rounded-full py-3 px-4 focus:outline-none focus:border-white/30 text-center"
-                      required
-                    />
-                    <input 
-                      type="password" 
-                      placeholder="Password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full backdrop-blur-[1px] text-white bg-white/5 border border-white/10 rounded-full py-3 px-4 focus:outline-none focus:border-white/30 text-center"
-                      required
-                    />
-                    <button 
-                      type="submit"
-                      className="w-full bg-white text-black font-medium py-3 px-4 rounded-full hover:bg-white/90 transition-colors"
-                    >
-                      {isLogin ? "Sign In" : "Create Account"}
-                    </button>
-                  </form>
-                </div>
-                
-                <div className="text-center">
-                  <p className="text-white/50">
-                    {isLogin ? "Don't have an account?" : "Already have an account?"}
-                    <button
-                      onClick={() => setIsLogin(!isLogin)}
-                      className="ml-1 text-white hover:text-white/80 font-medium underline"
-                    >
-                      {isLogin ? "Sign up" : "Sign in"}
-                    </button>
-                  </p>
-                </div>
-                
-                <p className="text-xs text-white/40 pt-10">
-                  By signing up, you agree to our Terms of Service and Privacy Policy.
-                </p>
-              </motion.div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <CanvasRevealEffect
+        animationSpeed={2}
+        containerClassName="absolute inset-0"
+        colors={[
+          [59, 130, 246],
+          [139, 92, 246],
+        ]}
+        dotSize={2}
+      />
     </div>
   );
 };
