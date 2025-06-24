@@ -60,6 +60,16 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## Stripe Integration
+
+The application uses Stripe for payments. Configure the publishable key in an `.env` file:
+
+```bash
+VITE_STRIPE_PUBLISHABLE_KEY=pk_live_51Rdf5TBII1IxzjEQuSctPsTbukpTLkozTpV2XMxCwcCedYnkaS0FhI9zstdUDKwir250P32ilYy0j0mRVmjbf9ye001ZiU48ny
+```
+
+An example environment file is provided as `.env.example`.
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/ea9fd0e3-c19d-402b-81fe-59e2e4d35d3c) and click on Share -> Publish.
