@@ -763,5 +763,3 @@ export const SignInPage = ({ className }: SignInPageProps) => {
     </div>
   );
 };
-
-export { SignInPage };

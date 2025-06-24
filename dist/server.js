@@ -3,7 +3,9 @@ import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
+import Stripe from 'stripe';
 const prisma = new PrismaClient();
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
 const app = express();
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key';
 app.use(cors());
@@ -51,6 +53,33 @@ app.post('/api/login', async (req, res) => {
     }
     catch (error) {
         res.status(500).json({ message: 'Internal server error' });
+    }
+});
+app.post('/api/create-checkout-session', async (req, res) => {
+    try {
+        const { promoCode } = req.body;
+        const sessionParams = {
+            payment_method_types: ['card'],
+            line_items: [
+                {
+                    price: 'price_1RdfCNBII1IxzjEQdPf7jBsM', // Pro plan price ID
+                    quantity: 1,
+                },
+            ],
+            mode: 'subscription',
+            success_url: `${req.headers.origin || 'http://localhost:3000'}/success`,
+            cancel_url: `${req.headers.origin || 'http://localhost:3000'}/cancel`,
+        };
+        // If promo code is XBETA, apply 100% off coupon
+        if (promoCode === 'XBETA') {
+            sessionParams.discounts = [{ coupon: 'gE50WGCD' }];
+        }
+        const session = await stripe.checkout.sessions.create(sessionParams);
+        res.json({ sessionId: session.id });
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Unable to create Stripe Checkout session' });
     }
 });
 const PORT = process.env.PORT || 3001;
