@@ -5,11 +5,9 @@ export const plans = {
   },
   pro: {
     name: "Pro",
-    limit: 100,
-  },
-  enterprise: {
-    name: "Enterprise",
     limit: Infinity,
+    price: 10,
+    billing: "year"
   },
 };
 
@@ -19,7 +17,7 @@ export const getUserPlan = () => {
   return storedPlan ? JSON.parse(storedPlan) : plans.free;
 };
 
-export const setUserPlan = (plan) => {
+export const setUserPlan = (plan: any) => {
   localStorage.setItem("userPlan", JSON.stringify(plan));
   window.dispatchEvent(new Event("storage"));
 }; 

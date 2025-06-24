@@ -73,7 +73,7 @@ const Pricing = () => {
       </section>
 
       {/* FAQ Section */}
-      <section className="pt-8 pb-20 px-4 bg-card/50">
+      <section id="faq" className="pt-8 pb-20 px-4 bg-card/50">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-foreground mb-4">
