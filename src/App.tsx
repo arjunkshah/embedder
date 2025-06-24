@@ -10,6 +10,7 @@ import NotFound from "./pages/NotFound";
 import EmbedGallery from "./pages/EmbedGallery";
 import Success from "./pages/Success";
 import Cancel from "./pages/Cancel";
+import Register from "./pages/Register";
 
 const queryClient = new QueryClient();
 
@@ -21,6 +22,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/embeds" element={<EmbedGallery />} />
           <Route path="/pricing" element={<Pricing />} />
