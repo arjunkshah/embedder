@@ -3,8 +3,10 @@ import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
+import Stripe from 'stripe';
 
 const prisma = new PrismaClient();
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2024-04-10' });
 const app = express();
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key';
 
@@ -60,6 +62,27 @@ app.post('/api/login', async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: 'Internal server error' });
     }
+});
+
+app.post('/api/create-checkout-session', async (req, res) => {
+  try {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price: 'price_1RdfCNBII1IxzjEQdPf7jBsM', // Pro plan price ID
+          quantity: 1,
+        },
+      ],
+      mode: 'subscription',
+      success_url: `${req.headers.origin || 'http://localhost:3000'}/success`,
+      cancel_url: `${req.headers.origin || 'http://localhost:3000'}/cancel`,
+    });
+    res.json({ sessionId: session.id });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Unable to create Stripe Checkout session' });
+  }
 });
 
 const PORT = process.env.PORT || 3001;
