@@ -184,7 +184,7 @@ export function HeroSection() {
                         <div
                             aria-hidden
                             className="bg-secondary/20 -inset-4 absolute z-0 scale-95 rounded-full blur-3xl duration-500 group-hover:scale-100" />
-                        <div className="relative grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                        <div className="relative grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2">
                             <div className="border-border bg-background/75 flex flex-col justify-between rounded-2xl border p-6 shadow-2xl shadow-black/20 backdrop-blur-md">
                                 <div>
                                     <p className="text-2xl font-medium">Hobby</p>
@@ -216,34 +216,15 @@ export function HeroSection() {
                                 </div>
                                 <div>
                                     <p className="mt-8 text-4xl font-light">
-                                        $29<span className="text-base font-normal text-gray-400">/mo</span>
+                                        $10<span className="text-base font-normal text-gray-400">/yr</span>
                                     </p>
+                                    <p className="mt-2 text-sm text-gray-400">Unlimited embeds</p>
                                     <Button
                                         asChild
                                         variant="default"
                                         className="mt-6 w-full">
                                         <a href="/pricing">
                                             <span>Upgrade to Pro</span>
-                                            <ArrowRight className="ml-2 size-4" />
-                                        </a>
-                                    </Button>
-                                </div>
-                            </div>
-                            <div className="border-border bg-background/75 flex flex-col justify-between rounded-2xl border p-6 shadow-2xl shadow-black/20 backdrop-blur-md">
-                                <div>
-                                    <p className="text-2xl font-medium">Enterprise</p>
-                                    <p className="mt-2 text-sm text-gray-400">
-                                        For large-scale applications with custom needs.
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="mt-8 text-4xl font-light">Custom</p>
-                                    <Button
-                                        asChild
-                                        variant="secondary"
-                                        className="mt-6 w-full">
-                                        <a href="/contact">
-                                            <span>Contact Sales</span>
                                             <ArrowRight className="ml-2 size-4" />
                                         </a>
                                     </Button>
@@ -296,9 +277,9 @@ function HeroHeader() {
                         Pricing
                     </a>
                     <a
-                        href="/#features"
+                        href="#faq"
                         className="text-muted-foreground hover:text-foreground text-sm">
-                        Features
+                        FAQ
                     </a>
                 </div>
 
@@ -344,9 +325,9 @@ function HeroHeader() {
                                 Pricing
                             </a>
                             <a
-                                href="/#features"
+                                href="#faq"
                                 className="text-muted-foreground hover:text-foreground text-sm">
-                                Features
+                                FAQ
                             </a>
                         </div>
 

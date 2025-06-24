@@ -1,8 +1,7 @@
-import React from "react";
-import { AuthPage } from "./Login";
+import { SignInPage } from "@/components/ui/sign-in-flow-1";
 
 const Register = () => {
-  return <AuthPage mode="signup" />;
+  return <SignInPage />;
 };
 
 export default Register; 

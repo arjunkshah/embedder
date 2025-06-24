@@ -63,7 +63,7 @@ function Pricing() {
           <div className="w-full">
             <div className="container mx-auto">
               <div className="flex text-center justify-center items-center gap-4 flex-col">
-                <div className="grid pt-20 text-left grid-cols-1 lg:grid-cols-3 w-full gap-8">
+                <div className="grid pt-20 text-left grid-cols-1 lg:grid-cols-2 w-full gap-8">
                   <Card className="w-full rounded-md">
                     <CardHeader>
                       <CardTitle>
@@ -90,7 +90,7 @@ function Pricing() {
                             <Check className="w-4 h-4 mt-1 text-primary" />
                             <p>Basic Customization</p>
                           </div>
-                           <div className="flex flex-row gap-4">
+                          <div className="flex flex-row gap-4">
                             <Check className="w-4 h-4 mt-1 text-primary" />
                             <p>Community Support</p>
                           </div>
@@ -105,7 +105,7 @@ function Pricing() {
                   </Card>
                   <Card className="w-full shadow-2xl rounded-md border-primary">
                     <CardHeader>
-                       <CardTitle>
+                      <CardTitle>
                         <span className="flex flex-row gap-4 items-center font-normal">
                           Pro
                         </span>
@@ -117,13 +117,13 @@ function Pricing() {
                     <CardContent>
                       <div className="flex flex-col gap-8 justify-start">
                         <p className="flex flex-row  items-center gap-2 text-xl">
-                          <span className="text-4xl">$29</span>
-                          <span className="text-sm text-muted-foreground"> / month</span>
+                          <span className="text-4xl">$10</span>
+                          <span className="text-sm text-muted-foreground"> / year</span>
                         </p>
                         <div className="flex flex-col gap-4 justify-start">
                           <div className="flex flex-row gap-4">
                             <Check className="w-4 h-4 mt-1 text-primary" />
-                            <p>100 Embeds/Month</p>
+                            <p>Unlimited Embeds</p>
                           </div>
                           <div className="flex flex-row gap-4">
                             <Check className="w-4 h-4 mt-1 text-primary" />
@@ -133,7 +133,7 @@ function Pricing() {
                             <Check className="w-4 h-4 mt-1 text-primary" />
                             <p>Remove Branding</p>
                           </div>
-                           <div className="flex flex-row gap-4">
+                          <div className="flex flex-row gap-4">
                             <Check className="w-4 h-4 mt-1 text-primary" />
                             <p>Priority Support</p>
                           </div>
@@ -143,46 +143,6 @@ function Pricing() {
                           setUserPlan(plans.pro);
                         }}>
                           Upgrade to Pro <MoveRight className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="w-full rounded-md">
-                    <CardHeader>
-                      <CardTitle>
-                        <span className="flex flex-row gap-4 items-center font-normal">
-                          Enterprise
-                        </span>
-                      </CardTitle>
-                      <CardDescription>
-                        For large-scale applications with custom requirements.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex flex-col gap-8 justify-start">
-                        <p className="flex flex-row  items-center gap-2 text-xl">
-                          <span className="text-4xl">Custom</span>
-                        </p>
-                        <div className="flex flex-col gap-4 justify-start">
-                          <div className="flex flex-row gap-4">
-                            <Check className="w-4 h-4 mt-1 text-primary" />
-                           <p>Unlimited Embeds</p>
-                          </div>
-                          <div className="flex flex-row gap-4">
-                            <Check className="w-4 h-4 mt-1 text-primary" />
-                            <p>Custom Integrations</p>
-                          </div>
-                          <div className="flex flex-row gap-4">
-                            <Check className="w-4 h-4 mt-1 text-primary" />
-                            <p>Dedicated Support</p>
-                          </div>
-                           <div className="flex flex-row gap-4">
-                            <Check className="w-4 h-4 mt-1 text-primary" />
-                            <p>Advanced Analytics</p>
-                          </div>
-                        </div>
-                        <Button variant="outline" className="gap-4" onClick={() => setUserPlan(plans.enterprise)}>
-                          Contact Sales <PhoneCall className="w-4 h-4" />
                         </Button>
                       </div>
                     </CardContent>
