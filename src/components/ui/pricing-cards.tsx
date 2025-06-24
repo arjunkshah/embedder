@@ -13,7 +13,8 @@ import { Elements, useStripe } from "@stripe/react-stripe-js";
 import { plans, setUserPlan } from "@/lib/plans";
 
 const stripePromise = loadStripe(
-  import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || ''
+  import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ||
+  "pk_live_51Rdf5TBII1IxzjEQuSctPsTbukpTLkozTpV2XMxCwcCedYnkaS0FhI9zstdUDKwir250P32ilYy0j0mRVmjbf9ye001ZiU48ny"
 );
 
 const CheckoutForm = ({ children }) => {
