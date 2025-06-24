@@ -348,7 +348,7 @@ export const AuthPage = ({ className, mode }: SignInPageProps) => {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full text-white py-3 px-4 rounded-full bg-cyan-600 hover:bg-cyan-700 disabled:bg-cyan-800/50 disabled:cursor-not-allowed transition-colors font-semibold"
+                    className="w-full text-black py-3 px-4 rounded-full bg-white hover:bg-neutral-200 disabled:bg-neutral-400/50 disabled:text-neutral-700 disabled:cursor-not-allowed transition-colors font-semibold"
                   >
                     {isSubmitting ? 'Processing...' : (mode === 'signin' ? 'Sign In' : 'Create Account')}
                   </button>
