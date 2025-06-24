@@ -6,7 +6,7 @@ import * as jwt from 'jsonwebtoken';
 import Stripe from 'stripe';
 
 const prisma = new PrismaClient();
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2024-04-10' });
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
 const app = express();
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key';
 
@@ -66,7 +66,8 @@ app.post('/api/login', async (req, res) => {
 
 app.post('/api/create-checkout-session', async (req, res) => {
   try {
-    const session = await stripe.checkout.sessions.create({
+    const { promoCode } = req.body;
+    const sessionParams: any = {
       payment_method_types: ['card'],
       line_items: [
         {
@@ -77,7 +78,12 @@ app.post('/api/create-checkout-session', async (req, res) => {
       mode: 'subscription',
       success_url: `${req.headers.origin || 'http://localhost:3000'}/success`,
       cancel_url: `${req.headers.origin || 'http://localhost:3000'}/cancel`,
-    });
+    };
+    // If promo code is XBETA, apply 100% off coupon
+    if (promoCode === 'XBETA') {
+      sessionParams.discounts = [{ coupon: 'gE50WGCD' }];
+    }
+    const session = await stripe.checkout.sessions.create(sessionParams);
     res.json({ sessionId: session.id });
   } catch (error) {
     console.error(error);
