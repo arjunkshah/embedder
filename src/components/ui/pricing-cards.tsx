@@ -21,36 +21,21 @@ const CheckoutForm = ({ children }) => {
   const stripe = useStripe();
 
   const handleCheckout = async (priceId) => {
-    if (!stripe) return;
-
-    // IMPORTANT: In a real-world application, you would not create a checkout session
-    // on the client-side with a secret key. This is insecure.
-    // Instead, you should have a backend endpoint that creates the session
-    // and returns the session ID to the client.
-    //
-    // Example backend call:
-    // const response = await fetch('/api/create-checkout-session', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ priceId }),
-    // });
-    // const { sessionId } = await response.json();
-    //
-    // const { error } = await stripe.redirectToCheckout({ sessionId });
-    // if (error) {
-    //   console.error(error);
-    // }
-    
-    // For demonstration purposes, we are creating a checkout session here.
-    // This is NOT secure and should NOT be used in production.
-    const checkoutSession = {
-        line_items: [{ price: priceId, quantity: 1 }],
-        mode: 'subscription',
-        success_url: `${window.location.origin}/success`,
-        cancel_url: `${window.location.origin}/cancel`,
-    };
-
-    alert("This is a demo. In a real application, you would be redirected to Stripe to complete your purchase.");
+    const response = await fetch("/api/create-checkout-session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ priceId }),
+    });
+    const data = await response.json();
+    if (data.sessionId) {
+      const stripe = await stripePromise;
+      const { error } = await stripe.redirectToCheckout({ sessionId: data.sessionId });
+      if (error) {
+        console.error(error);
+      }
+    } else {
+      alert("Failed to create Stripe Checkout session. Please try again.");
+    }
   };
 
   return <>{children(handleCheckout)}</>;
