@@ -254,7 +254,7 @@ const Shader: React.FC<{ source: string, uniforms: Uniforms, maxFps?: number }> 
 
 // --- Auth Page Component ---
 
-const AuthPage = ({ className, mode }: SignInPageProps) => {
+export const AuthPage = ({ className, mode }: SignInPageProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);

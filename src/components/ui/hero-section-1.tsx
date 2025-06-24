@@ -42,8 +42,16 @@ const videoIds = [
     "Oa9aWdc3_cM",
 ];
 
+const fallbackThumbnail = "https://www.youtube.com/img/desktop/yt_1200.png";
+
 const AnimatedVideoGrid = () => {
     const thumbnails = videoIds.map(id => `https://img.youtube.com/vi/${id}/hqdefault.jpg`);
+
+    // Helper to handle fallback on error
+    const handleImgError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+        e.currentTarget.onerror = null; // Prevent infinite loop
+        e.currentTarget.src = fallbackThumbnail;
+    };
 
     return (
         <div className="relative h-[500px] w-full max-w-4xl mx-auto overflow-hidden">
@@ -56,7 +64,7 @@ const AnimatedVideoGrid = () => {
             >
                 {[...thumbnails, ...thumbnails].map((src, i) => (
                     <div key={i} className="aspect-[9/16] rounded-lg overflow-hidden relative bg-zinc-800">
-                        <img src={src} alt={`video thumbnail ${i}`} className="object-cover w-full h-full" />
+                        <img src={src} alt={`video thumbnail ${i}`} className="object-cover w-full h-full" onError={handleImgError} />
                         <div className="absolute bottom-2 left-2 bg-black/50 text-white p-1 rounded-md">
                             {i % 3 === 0 ? <Youtube size={16}/> : i % 3 === 1 ? <Instagram size={16}/> : <Scissors size={16}/>}
                         </div>
@@ -130,17 +138,7 @@ export function HeroSection() {
                                 </AnimatedGroup>
 
                                 <AnimatedGroup
-                                    variants={{
-                                        container: {
-                                            visible: {
-                                                transition: {
-                                                    staggerChildren: 0.05,
-                                                    delayChildren: 0.75,
-                                                },
-                                            },
-                                        },
-                                        ...transitionVariants,
-                                    }}
+                                    variants={transitionVariants}
                                     className="mt-12 flex flex-col items-center justify-center gap-2 md:flex-row">
                                     <div
                                         key={1}
