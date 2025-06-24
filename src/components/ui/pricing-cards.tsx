@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, useStripe } from "@stripe/react-stripe-js";
 import { plans, setUserPlan } from "@/lib/plans";
+import React, { useState } from "react";
 
 const stripePromise = loadStripe(
   import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ||
@@ -20,11 +21,11 @@ const stripePromise = loadStripe(
 const CheckoutForm = ({ children }) => {
   const stripe = useStripe();
 
-  const handleCheckout = async (priceId) => {
+  const handleCheckout = async (priceId, promoCode = "") => {
     const response = await fetch("/api/create-checkout-session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ priceId }),
+      body: JSON.stringify({ priceId, promoCode }),
     });
     const data = await response.json();
     if (data.sessionId) {
@@ -42,6 +43,7 @@ const CheckoutForm = ({ children }) => {
 };
 
 function Pricing() {
+  const [promoCode, setPromoCode] = useState("");
   return (
     <Elements stripe={stripePromise}>
       <CheckoutForm>
@@ -124,8 +126,16 @@ function Pricing() {
                             <p>Priority Support</p>
                           </div>
                         </div>
+                        <input
+                          type="text"
+                          placeholder="Promo code (optional)"
+                          value={promoCode}
+                          onChange={e => setPromoCode(e.target.value)}
+                          className="border rounded px-2 py-1 text-sm w-40 mx-auto mb-2 opacity-70 focus:opacity-100 transition-opacity"
+                          style={{ display: 'block' }}
+                        />
                         <Button className="gap-4" onClick={() => {
-                          handleCheckout("price_123");
+                          handleCheckout("price_1RdfCNBII1IxzjEQdPf7jBsM", promoCode);
                           setUserPlan(plans.pro);
                         }}>
                           Upgrade to Pro <MoveRight className="w-4 h-4" />
