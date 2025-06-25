@@ -277,7 +277,7 @@ function HeroHeader() {
                         Pricing
                     </a>
                     <a
-                        href="#faq"
+                        href="/pricing#faq"
                         className="text-muted-foreground hover:text-foreground text-sm">
                         FAQ
                     </a>
@@ -325,7 +325,7 @@ function HeroHeader() {
                                 Pricing
                             </a>
                             <a
-                                href="#faq"
+                                href="/pricing#faq"
                                 className="text-muted-foreground hover:text-foreground text-sm">
                                 FAQ
                             </a>
