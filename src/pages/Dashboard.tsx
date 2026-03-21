@@ -295,11 +295,11 @@ const Dashboard = () => {
 
   return (
     <HelmetProvider>
-      <div className="flex h-screen bg-background text-foreground">
-        <aside className="w-80 shrink-0 border-r border-border p-6 flex flex-col justify-between">
+      <div className="flex min-h-screen bg-[radial-gradient(circle_at_10%_10%,hsl(var(--brand)/0.18),transparent_35%),linear-gradient(180deg,hsl(240_20%_7%),hsl(240_15%_5%))] text-foreground">
+        <aside className="w-80 shrink-0 border-r border-border/70 bg-card/70 p-6 backdrop-blur-xl flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-6">
-              <h1 className="text-2xl font-bold">Embed Generator</h1>
+              <h1 className="text-2xl font-bold">Embed Studio</h1>
               <Link to="/embeds">
                 <Button variant="outline" size="sm">View Gallery</Button>
               </Link>
@@ -307,9 +307,9 @@ const Dashboard = () => {
 
             <div className="space-y-2 mb-4">
               <Label className="text-sm font-medium">Plan: {userPlan.name}</Label>
-              <div className="w-full bg-muted rounded-full h-2.5">
+              <div className="h-2.5 w-full rounded-full bg-muted/60">
                 <div 
-                  className="bg-primary h-2.5 rounded-full" 
+                  className="h-2.5 rounded-full bg-brand" 
                   style={{ width: `${(embedCount / userPlan.limit) * 100}%` }}
                 ></div>
               </div>
@@ -386,7 +386,7 @@ const Dashboard = () => {
 
                   <div className="space-y-2">
                     <Label>Options</Label>
-                    <div className="space-y-2 rounded-md border p-3">
+                    <div className="space-y-2 rounded-md border border-border/70 bg-background/40 p-3">
                       <div className="flex items-center justify-between">
                         <Label htmlFor="autoplay" className="font-normal">Autoplay</Label>
                         <Switch
@@ -415,7 +415,7 @@ const Dashboard = () => {
             </div>
           </div>
           
-          <Button onClick={showPreview ? handleGenerate : () => generateEmbedCode(true, false)} size="lg" className="w-full" disabled={isEmbedLimitReached && !showPreview}>
+          <Button onClick={showPreview ? handleGenerate : () => generateEmbedCode(true, false)} size="lg" className="w-full bg-brand text-brand-foreground hover:bg-brand/90" disabled={isEmbedLimitReached && !showPreview}>
             {showPreview ? (
               <>
                 <Code className="mr-2 h-4 w-4" />
@@ -431,7 +431,7 @@ const Dashboard = () => {
 
         </aside>
 
-        <main className="flex-1 flex flex-col p-8 bg-muted/20">
+        <main className="flex flex-1 flex-col bg-background/40 p-8 backdrop-blur-sm">
           <div className="flex-1 flex items-center justify-center">
             {showPreview && (
               <Rnd
@@ -440,7 +440,7 @@ const Dashboard = () => {
                   setWidth(ref.offsetWidth);
                   setHeight(ref.offsetHeight);
                 }}
-                className="relative shadow-2xl rounded-lg"
+                className="relative rounded-xl border border-border/70 bg-black shadow-2xl"
                 lockAspectRatio={isVerticalVideo}
               >
                 {renderPreview()}
@@ -452,7 +452,7 @@ const Dashboard = () => {
             <div className="mt-8 flex justify-center">
               <div className="w-full max-w-2xl">
                 {showCode ? (
-                    <div className="w-full p-4 bg-background rounded-lg border">
+                    <div className="w-full rounded-xl border border-border/70 bg-card/70 p-4 backdrop-blur-xl">
                       <div className="flex justify-between items-center mb-2">
                         <Label>Embed Code</Label>
                         <Button variant="ghost" size="sm" onClick={copyToClipboard}>
@@ -460,7 +460,7 @@ const Dashboard = () => {
                           <span className="ml-2">{copied ? "Copied!" : "Copy"}</span>
                         </Button>
                       </div>
-                      <pre className="text-sm bg-muted p-4 rounded-md overflow-x-auto">
+                      <pre className="overflow-x-auto rounded-md bg-muted/60 p-4 text-sm">
                         <code>{embedCode}</code>
                       </pre>
                     </div>
