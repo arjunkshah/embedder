@@ -1,97 +1,312 @@
-import express from 'express';
 import cors from 'cors';
-import { PrismaClient } from '@prisma/client';
+import express, { type NextFunction, type Request, type Response } from 'express';
+import { Prisma, type User } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 import Stripe from 'stripe';
 
-const prisma = new PrismaClient();
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
-const app = express();
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key';
+import prisma from './lib/db.js';
 
-app.use(cors());
+const app = express();
+
+const PORT = Number(process.env.PORT ?? 3001);
+const APP_ORIGIN = process.env.APP_ORIGIN ?? 'http://localhost:5173';
+const DEFAULT_PRICE_ID = 'price_1RdfCNBII1IxzjEQdPf7jBsM';
+const DEFAULT_PROMO_COUPON_ID = 'gE50WGCD';
+const PROMO_CODE = 'XBETA';
+
+type AuthenticatedRequest = Request & {
+  user?: {
+    userId: string;
+    email: string;
+  };
+};
+
+const stripeSecret = process.env.STRIPE_SECRET_KEY;
+const stripe = stripeSecret
+  ? new Stripe(stripeSecret)
+  : null;
+
+const jwtSecret = process.env.JWT_SECRET;
+if (!jwtSecret) {
+  console.warn('[startup] JWT_SECRET is not set. Auth endpoints are disabled until it is configured.');
+}
+
+app.use(cors({ origin: APP_ORIGIN, credentials: true }));
+
+app.post('/api/webhooks/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
+  if (!stripe) {
+    return sendError(res, 503, 'Stripe is not configured');
+  }
+
+  const stripeSignature = req.headers['stripe-signature'];
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  if (!stripeSignature || !webhookSecret) {
+    return sendError(res, 400, 'Stripe webhook signing secret is missing');
+  }
+
+  let event: Stripe.Event;
+  try {
+    event = stripe.webhooks.constructEvent(req.body, stripeSignature, webhookSecret);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unable to verify webhook';
+    return sendError(res, 400, message);
+  }
+
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    const userId = session.metadata?.userId;
+
+    if (userId) {
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          plan: 'pro',
+        },
+      });
+    }
+  }
+
+  if (event.type === 'customer.subscription.deleted') {
+    const subscription = event.data.object;
+    const userId = subscription.metadata?.userId;
+
+    if (userId) {
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          plan: 'free',
+        },
+      });
+    }
+  }
+
+  return res.status(200).json({ received: true });
+});
+
 app.use(express.json());
 
-app.post('/api/register', async (req, res) => {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-        return res.status(400).json({ message: 'Email and password are required' });
-    }
-
-    try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const user = await prisma.user.create({
-            data: {
-                email,
-                password: hashedPassword,
-            },
-        });
-        const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
-        res.status(201).json({ message: 'User created successfully', token });
-    } catch (error) {
-        // P2002 is the Prisma code for a unique constraint violation
-        if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
-            return res.status(409).json({ message: 'User already exists' });
-        }
-        res.status(500).json({ message: 'Internal server error' });
-    }
-});
-
-app.post('/api/login', async (req, res) => {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-        return res.status(400).json({ message: 'Email and password are required' });
-    }
-
-    try {
-        const user = await prisma.user.findUnique({ where: { email } });
-        if (!user) {
-            return res.status(401).json({ message: 'Invalid credentials' });
-        }
-
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) {
-            return res.status(401).json({ message: 'Invalid credentials' });
-        }
-
-        const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
-        res.json({ token });
-    } catch (error) {
-        res.status(500).json({ message: 'Internal server error' });
-    }
-});
-
-app.post('/api/create-checkout-session', async (req, res) => {
+app.get('/api/health', async (_req, res) => {
   try {
-    const { promoCode } = req.body;
-    const sessionParams: any = {
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price: 'price_1RdfCNBII1IxzjEQdPf7jBsM', // Pro plan price ID
-          quantity: 1,
-        },
-      ],
-      mode: 'subscription',
-      success_url: `${req.headers.origin || 'http://localhost:3000'}/success`,
-      cancel_url: `${req.headers.origin || 'http://localhost:3000'}/cancel`,
-    };
-    // If promo code is XBETA, apply 100% off coupon
-    if (promoCode === 'XBETA') {
-      sessionParams.discounts = [{ coupon: 'gE50WGCD' }];
-    }
-    const session = await stripe.checkout.sessions.create(sessionParams);
-    res.json({ sessionId: session.id });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Unable to create Stripe Checkout session' });
+    await prisma.$queryRaw`SELECT 1`;
+    return res.json({ status: 'ok' });
+  } catch {
+    return sendError(res, 503, 'Database unavailable');
   }
 });
 
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-}); 
+app.post('/api/register', async (req, res) => {
+  if (!jwtSecret) {
+    return sendError(res, 503, 'Server is missing JWT configuration');
+  }
+
+  const email = normalizeEmail(req.body?.email);
+  const password = normalizePassword(req.body?.password);
+
+  if (!email || !password) {
+    return sendError(res, 400, 'A valid email and password are required');
+  }
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+      },
+    });
+
+    const token = createToken(user, jwtSecret);
+    return res.status(201).json({
+      message: 'User created successfully',
+      token,
+      user: toPublicUser(user),
+    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      return sendError(res, 409, 'User already exists');
+    }
+
+    console.error('[register]', error);
+    return sendError(res, 500, 'Internal server error');
+  }
+});
+
+app.post('/api/login', async (req, res) => {
+  if (!jwtSecret) {
+    return sendError(res, 503, 'Server is missing JWT configuration');
+  }
+
+  const email = normalizeEmail(req.body?.email);
+  const password = normalizePassword(req.body?.password);
+
+  if (!email || !password) {
+    return sendError(res, 400, 'A valid email and password are required');
+  }
+
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return sendError(res, 401, 'Invalid credentials');
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return sendError(res, 401, 'Invalid credentials');
+    }
+
+    const token = createToken(user, jwtSecret);
+    return res.json({ token, user: toPublicUser(user) });
+  } catch (error) {
+    console.error('[login]', error);
+    return sendError(res, 500, 'Internal server error');
+  }
+});
+
+app.get('/api/me', authenticate, async (req: AuthenticatedRequest, res) => {
+  try {
+    const user = await prisma.user.findUnique({ where: { id: req.user!.userId } });
+    if (!user) {
+      return sendError(res, 404, 'User not found');
+    }
+
+    return res.json({ user: toPublicUser(user) });
+  } catch (error) {
+    console.error('[me]', error);
+    return sendError(res, 500, 'Internal server error');
+  }
+});
+
+app.post('/api/create-checkout-session', async (req: AuthenticatedRequest, res) => {
+  if (!stripe) {
+    return sendError(res, 503, 'Stripe is not configured');
+  }
+
+  const priceId = typeof req.body?.priceId === 'string' && req.body.priceId.trim().length > 0
+    ? req.body.priceId.trim()
+    : process.env.STRIPE_PRO_PRICE_ID || DEFAULT_PRICE_ID;
+
+  const promoCode = typeof req.body?.promoCode === 'string' ? req.body.promoCode.trim().toUpperCase() : '';
+  const origin = typeof req.headers.origin === 'string' ? req.headers.origin : APP_ORIGIN;
+  const authUser = parseAuthHeader(req.headers.authorization);
+
+  try {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [{ price: priceId, quantity: 1 }],
+      mode: 'subscription',
+      success_url: `${origin}/success`,
+      cancel_url: `${origin}/cancel`,
+      ...(promoCode === PROMO_CODE ? { discounts: [{ coupon: process.env.STRIPE_PROMO_COUPON_ID || DEFAULT_PROMO_COUPON_ID }] } : {}),
+      ...(authUser ? { metadata: { userId: authUser.userId } } : {}),
+    });
+
+    return res.json({ sessionId: session.id });
+  } catch (error) {
+    console.error('[create-checkout-session]', error);
+    return sendError(res, 500, 'Unable to create Stripe Checkout session');
+  }
+});
+
+app.use((error: Error, _req: Request, res: Response, _next: NextFunction) => {
+  console.error('[unhandled]', error);
+  return sendError(res, 500, 'Internal server error');
+});
+
+const server = app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+
+const shutdown = async () => {
+  server.close(async () => {
+    await prisma.$disconnect();
+    process.exit(0);
+  });
+};
+
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
+
+function sendError(res: Response, status: number, message: string) {
+  return res.status(status).json({ error: message });
+}
+
+function normalizeEmail(email: unknown): string | null {
+  if (typeof email !== 'string') {
+    return null;
+  }
+
+  const normalized = email.trim().toLowerCase();
+  if (!normalized || !normalized.includes('@')) {
+    return null;
+  }
+
+  return normalized;
+}
+
+function normalizePassword(password: unknown): string | null {
+  if (typeof password !== 'string') {
+    return null;
+  }
+
+  const normalized = password.trim();
+  if (normalized.length < 8 || normalized.length > 128) {
+    return null;
+  }
+
+  return normalized;
+}
+
+function createToken(user: Pick<User, 'id' | 'email'>, secret: string): string {
+  return jwt.sign({ userId: user.id, email: user.email }, secret, { expiresIn: '7d' });
+}
+
+function toPublicUser(user: Pick<User, 'id' | 'email' | 'plan' | 'createdAt' | 'updatedAt'>) {
+  return {
+    id: user.id,
+    email: user.email,
+    plan: user.plan,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+  };
+}
+
+function parseAuthHeader(authorizationHeader: string | undefined) {
+  if (!authorizationHeader || !jwtSecret) {
+    return null;
+  }
+
+  const [scheme, token] = authorizationHeader.split(' ');
+  if (scheme !== 'Bearer' || !token) {
+    return null;
+  }
+
+  try {
+    const payload = jwt.verify(token, jwtSecret);
+    if (
+      typeof payload === 'object' &&
+      payload !== null &&
+      'userId' in payload &&
+      typeof payload.userId === 'string' &&
+      'email' in payload &&
+      typeof payload.email === 'string'
+    ) {
+      return { userId: payload.userId, email: payload.email };
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function authenticate(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  const user = parseAuthHeader(req.headers.authorization);
+  if (!user) {
+    return sendError(res, 401, 'Unauthorized');
+  }
+
+  req.user = user;
+  return next();
+}
